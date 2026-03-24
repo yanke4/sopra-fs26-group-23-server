@@ -1,7 +1,9 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
@@ -55,4 +57,49 @@ public class UserController {
 		// convert internal representation of user back to API
 		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(createdUser);
 	}
+
+	@PostMapping("/login")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public UserGetDTO loginUser(@RequestBody UserPostDTO userPostDTO){
+
+		User loginUser = userService.logInUser(userPostDTO);
+		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(loginUser);
+	}
+
+	@GetMapping("/users/{id}")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public UserGetDTO getUserWithId(@PathVariable("id") Long id){
+		
+		User userWithId = userService.getUserById(id);
+		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(userWithId);
+	}
+
+	@PostMapping("/users/{id}/logout")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public void userLogout(@PathVariable("id") Long id, @RequestHeader("token") String token){
+		User user = userService.authenticateUser(token);
+
+		if (!user.getId().equals(id)){
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You're not permitted to logout another user");
+		}
+
+		userService.logOutUser(id);
+	}
+
+	@PutMapping("/users/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	@ResponseBody
+	public void updateUser(@PathVariable("id") Long id, @RequestBody UserPostDTO userPostDTO, @RequestHeader("token") String token){
+		User user = userService.authenticateUser(token);
+
+		if(!user.getId().equals(id)){
+			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You're not permitted to update another user");
+		}
+		
+		userService.updateUser(id, userPostDTO);
+	}
+
 }
