@@ -38,18 +38,21 @@ public class UserService {
 		return this.userRepository.findAll();
 	}
 
-	public User createUser(User newUser) {
-		newUser.setToken(UUID.randomUUID().toString());
-		newUser.setStatus(UserStatus.OFFLINE);
-		checkIfUserExists(newUser);
-		// saves the given entity but data is only persisted in the database once
-		// flush() is called
-		newUser = userRepository.save(newUser);
-		userRepository.flush();
+    public User createUser(User newUser) {
+        newUser.setToken(UUID.randomUUID().toString());
+        newUser.setStatus(UserStatus.OFFLINE);
+        checkIfUserExists(newUser);
+        // saves the given entity but data is only persisted in the database once
+        // flush() is called
+        newUser = userRepository.save(newUser);
+        userRepository.flush();
 
-		log.debug("Created Information for User: {}", newUser);
-		return newUser;
-	}
+        log.debug("Created Information for User: {}", newUser);
+        return newUser;
+    }
+    public User getUserById(Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    }
 
 	/**
 	 * This is a helper method that will check the uniqueness criteria of the

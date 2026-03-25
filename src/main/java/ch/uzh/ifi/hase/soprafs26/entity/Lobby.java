@@ -2,6 +2,8 @@ package ch.uzh.ifi.hase.soprafs26.entity;
 
 import java.io.Serializable;
 import java.util.List;
+
+import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 
@@ -17,7 +19,7 @@ public class Lobby implements Serializable {
     private Long lobbyId;
 
     @Column(nullable = false)
-    private Boolean lobbyStatus; // true = "open", false = "closed"
+    private LobbyStatus status; // OPEN, CLOSED
 
     @Column(nullable = false, unique = true)
     private Long joinCode;
@@ -34,11 +36,11 @@ public class Lobby implements Serializable {
     public void setLobbyId(Long lobbyId) {
         this.lobbyId = lobbyId;
     }
-    public Boolean getLobbyStatus() {
-        return lobbyStatus;
+    public LobbyStatus getStatus() {
+        return status;
     }
-    public void setLobbyStatus(Boolean lobbyStatus) {
-        this.lobbyStatus = lobbyStatus;
+    public void setStatus(LobbyStatus status) {
+        this.status = status;
     }
     public Long getJoinCode() {
         return joinCode;

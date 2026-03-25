@@ -2,11 +2,12 @@ package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
 import java.util.List;
 
+import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyGetDTO;
 
 public class LobbyGetDTO {
     private Long lobbyId;
-    private Boolean lobbyStatus; // true = "open", false = "closed"
+    private LobbyStatus status; // OPEN, CLOSED
     private Long joinCode;
     private UserGetDTO host;
     private List<UserGetDTO> jointUsers;
@@ -17,12 +18,12 @@ public class LobbyGetDTO {
     public void setLobbyId(Long lobbyId) {
         this.lobbyId = lobbyId;
     }
-    public Boolean getLobbyStatus() {
-        return lobbyStatus;
+    public LobbyStatus getStatus() {
+        return status;
     }
 
-    public void setLobbyStatus(Boolean lobbyStatus) {
-        this.lobbyStatus = lobbyStatus;
+    public void setStatus(LobbyStatus status) {
+        this.status = status;
     }
     public Long getJoinCode() {
         return joinCode;
