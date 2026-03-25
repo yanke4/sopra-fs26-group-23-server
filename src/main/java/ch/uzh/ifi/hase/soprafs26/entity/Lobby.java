@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 
 @Entity
-@Table(name = "lobbies")
+@Table(name = "LOBBIES")
 public class Lobby implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -17,11 +17,11 @@ public class Lobby implements Serializable {
     private Long lobbyId;
 
     @Column(nullable = false)
-    private String lobbyStatus; // "open", "closed", "in-game"
+    private Boolean lobbyStatus; // true = "open", false = "closed"
 
     @Column(nullable = false, unique = true)
     private Long joinCode;
-    
+
     @ManyToOne
     private User host;
 
@@ -34,17 +34,17 @@ public class Lobby implements Serializable {
     public void setLobbyId(Long lobbyId) {
         this.lobbyId = lobbyId;
     }
-    public String getLobbyStatus() {
+    public Boolean getLobbyStatus() {
         return lobbyStatus;
     }
-    public void setLobbyStatus(String lobbyStatus) {
+    public void setLobbyStatus(Boolean lobbyStatus) {
         this.lobbyStatus = lobbyStatus;
     }
     public Long getJoinCode() {
-        return JoinCode;
+        return joinCode;
     }
     public void setJoinCode(Long joinCode) {
-        JoinCode = joinCode;
+        this.joinCode = joinCode;
     }
     public User getHost() {
         return host;

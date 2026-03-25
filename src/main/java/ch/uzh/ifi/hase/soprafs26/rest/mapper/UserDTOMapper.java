@@ -19,9 +19,8 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
  * creating information (POST).
  */
 @Mapper
-public interface DTOMapper {
-
-	DTOMapper INSTANCE = Mappers.getMapper(DTOMapper.class);
+public interface UserDTOMapper {
+	UserDTOMapper INSTANCE = Mappers.getMapper(UserDTOMapper.class);
 
 	@Mapping(source = "name", target = "name")
 	@Mapping(source = "username", target = "username")

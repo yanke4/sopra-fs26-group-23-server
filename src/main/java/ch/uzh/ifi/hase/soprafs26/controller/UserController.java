@@ -8,7 +8,7 @@ import org.springframework.web.server.ResponseStatusException;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
-import ch.uzh.ifi.hase.soprafs26.rest.mapper.DTOMapper;
+import ch.uzh.ifi.hase.soprafs26.rest.mapper.UserDTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.UserService;
 
 import java.util.ArrayList;
@@ -40,7 +40,7 @@ public class UserController {
 
 		// convert each user to the API representation
 		for (User user : users) {
-			userGetDTOs.add(DTOMapper.INSTANCE.convertEntityToUserGetDTO(user));
+			userGetDTOs.add(UserDTOMapper.INSTANCE.convertEntityToUserGetDTO(user));
 		}
 		return userGetDTOs;
 	}
@@ -50,12 +50,12 @@ public class UserController {
 	@ResponseBody
 	public UserGetDTO createUser(@RequestBody UserPostDTO userPostDTO) {
 		// convert API user to internal representation
-		User userInput = DTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
+		User userInput = UserDTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
 
 		// create user
 		User createdUser = userService.createUser(userInput);
 		// convert internal representation of user back to API
-		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(createdUser);
+		return UserDTOMapper.INSTANCE.convertEntityToUserGetDTO(createdUser);
 	}
 
 	@PostMapping("/login")
@@ -64,16 +64,16 @@ public class UserController {
 	public UserGetDTO loginUser(@RequestBody UserPostDTO userPostDTO){
 
 		User loginUser = userService.logInUser(userPostDTO);
-		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(loginUser);
+		return UserDTOMapper.INSTANCE.convertEntityToUserGetDTO(loginUser);
 	}
 
 	@GetMapping("/users/{id}")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public UserGetDTO getUserWithId(@PathVariable("id") Long id){
-		
+
 		User userWithId = userService.getUserById(id);
-		return DTOMapper.INSTANCE.convertEntityToUserGetDTO(userWithId);
+		return UserDTOMapper.INSTANCE.convertEntityToUserGetDTO(userWithId);
 	}
 
 	@PostMapping("/users/{id}/logout")
@@ -98,7 +98,7 @@ public class UserController {
 		if(!user.getId().equals(id)){
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You're not permitted to update another user");
 		}
-		
+
 		userService.updateUser(id, userPostDTO);
 	}
 
