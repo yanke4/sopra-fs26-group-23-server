@@ -8,74 +8,126 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
+import java.util.HexFormat;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * User Service
- * This class is the "worker" and responsible for all functionality related to
- * the user
- * (e.g., it creates, modifies, deletes, finds). The result will be passed back
- * to the caller.
  */
 @Service
 @Transactional
 public class UserService {
 
-	private final Logger log = LoggerFactory.getLogger(UserService.class);
+    private final Logger log = LoggerFactory.getLogger(UserService.class);
 
-	private final UserRepository userRepository;
+    private final UserRepository userRepository;
 
-	public UserService(@Qualifier("userRepository") UserRepository userRepository) {
-		this.userRepository = userRepository;
-	}
+    public UserService(@Qualifier("userRepository") UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
-	public List<User> getUsers() {
-		return this.userRepository.findAll();
-	}
+    public List<User> getUsers() {
+        return this.userRepository.findAll();
+    }
 
     public User createUser(User newUser) {
-        newUser.setToken(UUID.randomUUID().toString());
-        newUser.setStatus(UserStatus.OFFLINE);
-        checkIfUserExists(newUser);
-        // saves the given entity but data is only persisted in the database once
-        // flush() is called
+        if (newUser.getUsername() == null || newUser.getUsername().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Username must not be empty");
+        }
+        if (newUser.getPasswordHash() == null || newUser.getPasswordHash().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must not be empty");
+        }
+
+        checkIfUsernameExists(newUser.getUsername());
+        newUser.setPasswordHash(hashPassword(newUser.getPasswordHash()));
+        if (newUser.getCreatedAt() == null) {
+            newUser.setCreatedAt(Instant.now());
+        }
+
         newUser = userRepository.save(newUser);
         userRepository.flush();
 
-        log.debug("Created Information for User: {}", newUser);
+        log.debug("Created Information for User: {}", newUser.getId());
         return newUser;
     }
+
     public User getUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
-	/**
-	 * This is a helper method that will check the uniqueness criteria of the
-	 * username and the name
-	 * defined in the User entity. The method will do nothing if the input is unique
-	 * and throw an error otherwise.
-	 *
-	 * @param userToBeCreated
-	 * @throws org.springframework.web.server.ResponseStatusException
-	 * @see User
-	 */
-	private void checkIfUserExists(User userToBeCreated) {
-		User userByUsername = userRepository.findByUsername(userToBeCreated.getUsername());
-		User userByName = userRepository.findByName(userToBeCreated.getName());
+    public User logInUser(UserPostDTO userPostDTO) {
+        User user = userRepository.findByUsername(userPostDTO.getUsername());
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+        }
 
-		String baseErrorMessage = "The %s provided %s not unique. Therefore, the user could not be created!";
-		if (userByUsername != null && userByName != null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-					String.format(baseErrorMessage, "username and the name", "are"));
-		} else if (userByUsername != null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(baseErrorMessage, "username", "is"));
-		} else if (userByName != null) {
-			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format(baseErrorMessage, "name", "is"));
-		}
-	}
+        String providedHash = hashPassword(userPostDTO.getPassword());
+        if (!providedHash.equals(user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+        }
+
+        return user;
+    }
+
+    // Legacy token-based endpoints are no longer backed by token persistence.
+    // We keep this method to avoid breaking controller routes at compile time.
+    public User authenticateUser(String token) {
+        User user = userRepository.findByUsername(token);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid authentication token");
+        }
+        return user;
+    }
+
+    public void logOutUser(Long id) {
+        getUserById(id);
+    }
+
+    public void updateUser(Long id, UserPostDTO userPostDTO) {
+        User user = getUserById(id);
+
+        if (userPostDTO.getUsername() != null && !userPostDTO.getUsername().isBlank()
+                && !user.getUsername().equals(userPostDTO.getUsername())) {
+            checkIfUsernameExists(userPostDTO.getUsername());
+            user.setUsername(userPostDTO.getUsername());
+        }
+
+        if (userPostDTO.getPassword() != null && !userPostDTO.getPassword().isBlank()) {
+            user.setPasswordHash(hashPassword(userPostDTO.getPassword()));
+        }
+
+        userRepository.save(user);
+        userRepository.flush();
+    }
+
+    private void checkIfUsernameExists(String username) {
+        User userByUsername = userRepository.findByUsername(username);
+        if (userByUsername != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "The username provided is not unique. Therefore, the user could not be created!");
+        }
+    }
+
+    private String hashPassword(String rawPassword) {
+        if (rawPassword == null || rawPassword.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must not be empty");
+        }
+
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(rawPassword.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 hashing algorithm unavailable", e);
+        }
+    }
 }
