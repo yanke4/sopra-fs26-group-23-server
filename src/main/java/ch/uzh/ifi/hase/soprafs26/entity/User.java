@@ -1,20 +1,20 @@
 package ch.uzh.ifi.hase.soprafs26.entity;
 
-import jakarta.persistence.*;
-
-import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 
 import java.io.Serializable;
+import java.time.Instant;
 
 /**
  * Internal User Representation
  * This class composes the internal representation of the user and defines how
  * the user is stored in the database.
- * Every variable will be mapped into a database field with the @Column
- * annotation
- * - nullable = false -> this cannot be left empty
- * - unique = true -> this value must be unqiue across the database -> composes
- * the primary key
  */
 @Entity
 @Table(name = "USERS")
@@ -23,20 +23,24 @@ public class User implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-
-	@Column(nullable = false)
-	private String name;
 
 	@Column(nullable = false, unique = true)
 	private String username;
 
-	@Column(nullable = false, unique = true)
-	private String token;
+	@Column(name = "password_hash", nullable = false)
+	private String passwordHash;
 
-	@Column(nullable = false)
-	private UserStatus status;
+	@Column(name = "created_at", nullable = false, updatable = false)
+	private Instant createdAt;
+
+	@PrePersist
+	protected void onCreate() {
+		if (this.createdAt == null) {
+			this.createdAt = Instant.now();
+		}
+	}
 
 	public Long getId() {
 		return id;
@@ -44,14 +48,6 @@ public class User implements Serializable {
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
 	}
 
 	public String getUsername() {
@@ -62,19 +58,19 @@ public class User implements Serializable {
 		this.username = username;
 	}
 
-	public String getToken() {
-		return token;
+	public String getPasswordHash() {
+		return passwordHash;
 	}
 
-	public void setToken(String token) {
-		this.token = token;
+	public void setPasswordHash(String passwordHash) {
+		this.passwordHash = passwordHash;
 	}
 
-	public UserStatus getStatus() {
-		return status;
+	public Instant getCreatedAt() {
+		return createdAt;
 	}
 
-	public void setStatus(UserStatus status) {
-		this.status = status;
+	public void setCreatedAt(Instant createdAt) {
+		this.createdAt = createdAt;
 	}
 }

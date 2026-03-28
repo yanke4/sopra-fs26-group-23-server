@@ -8,70 +8,56 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.server.ResponseStatusException;
 
-import ch.uzh.ifi.hase.soprafs26.constant.UserStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Test class for the UserResource REST resource.
- *
- * @see UserService
- */
 @WebAppConfiguration
 @SpringBootTest
 public class UserServiceIntegrationTest {
 
-	@Qualifier("userRepository")
-	@Autowired
-	private UserRepository userRepository;
+    @Qualifier("userRepository")
+    @Autowired
+    private UserRepository userRepository;
 
-	@Autowired
-	private UserService userService;
+    @Autowired
+    private UserService userService;
 
-	@BeforeEach
-	public void setup() {
-		userRepository.deleteAll();
-	}
+    @BeforeEach
+    public void setup() {
+        userRepository.deleteAll();
+    }
 
-	@Test
-	public void createUser_validInputs_success() {
-		// given
-		assertNull(userRepository.findByUsername("testUsername"));
+    @Test
+    public void createUser_validInputs_success() {
+        assertNull(userRepository.findByUsername("testUsername"));
 
-		User testUser = new User();
-		testUser.setName("testName");
-		testUser.setUsername("testUsername");
+        User testUser = new User();
+        testUser.setUsername("testUsername");
+        testUser.setPasswordHash("plainPassword");
 
-		// when
-		User createdUser = userService.createUser(testUser);
+        User createdUser = userService.createUser(testUser);
 
-		// then
-		assertEquals(testUser.getId(), createdUser.getId());
-		assertEquals(testUser.getName(), createdUser.getName());
-		assertEquals(testUser.getUsername(), createdUser.getUsername());
-		assertNotNull(createdUser.getToken());
-		assertEquals(UserStatus.OFFLINE, createdUser.getStatus());
-	}
+        assertEquals(testUser.getId(), createdUser.getId());
+        assertEquals(testUser.getUsername(), createdUser.getUsername());
+        assertNotEquals("plainPassword", createdUser.getPasswordHash());
+        assertNotNull(createdUser.getCreatedAt());
+    }
 
-	@Test
-	public void createUser_duplicateUsername_throwsException() {
-		assertNull(userRepository.findByUsername("testUsername"));
+    @Test
+    public void createUser_duplicateUsername_throwsException() {
+        assertNull(userRepository.findByUsername("testUsername"));
 
-		User testUser = new User();
-		testUser.setName("testName");
-		testUser.setUsername("testUsername");
-		userService.createUser(testUser);
+        User testUser = new User();
+        testUser.setUsername("testUsername");
+        testUser.setPasswordHash("firstPassword");
+        userService.createUser(testUser);
 
-		// attempt to create second user with same username
-		User testUser2 = new User();
+        User testUser2 = new User();
+        testUser2.setUsername("testUsername");
+        testUser2.setPasswordHash("secondPassword");
 
-		// change the name but forget about the username
-		testUser2.setName("testName2");
-		testUser2.setUsername("testUsername");
-
-		// check that an error is thrown
-		assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser2));
-	}
+        assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser2));
+    }
 }
