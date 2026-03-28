@@ -1,8 +1,10 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
@@ -49,6 +51,47 @@ public class LobbyService {
     messagingTemplate.convertAndSend("/topic/lobby/" + newLobby.getLobbyId(), dto);
 
         return newLobby;
+    }
+
+    public Lobby joinLobby(Long joinCode, Long userId) {
+
+        Lobby lobby = lobbyRepository.findByJoinCode(joinCode);
+        if (lobby == null) {
+            throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "No lobby found with code " + joinCode + "."
+            );
+        }
+
+        if (lobby.getStatus() != LobbyStatus.OPEN) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Lobby is no longer open."
+            );
+        }
+
+        final int MAX_PLAYERS = 4;
+        if (lobby.getJointUsers().size() >= MAX_PLAYERS - 1) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Lobby is full."
+            );
+        }
+
+        User user = userService.getUserById(userId);
+
+        boolean isHost = lobby.getHost().getId().equals(userId);
+        boolean alreadyJoined = lobby.getJointUsers()
+            .stream()
+            .anyMatch(u -> u.getId().equals(userId));
+
+        if (!isHost && !alreadyJoined) {
+            lobby.getJointUsers().add(user);
+            lobby = lobbyRepository.save(lobby);
+            lobbyRepository.flush();
+        }
+
+        return lobby;
     }
 
     private Long generateUniqueJoinCode() {
