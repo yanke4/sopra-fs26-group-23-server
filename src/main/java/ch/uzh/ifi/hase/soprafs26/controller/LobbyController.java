@@ -2,6 +2,7 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -43,5 +44,13 @@ public class LobbyController {
         @RequestBody LobbyPutDTO lobbyPutDTO) {
     Lobby lobby = lobbyService.joinLobby(joinCode, lobbyPutDTO.getUserId());
     return LobbyDTOMapper.INSTANCE.convertEntityToLobbyGetDTO(lobby);
+    }
+
+    @GetMapping("/lobbies/{lobbyId}")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public LobbyGetDTO getLobby(@PathVariable Long lobbyId) {
+        Lobby lobby = lobbyService.getLobbyById(lobbyId);
+        return LobbyDTOMapper.INSTANCE.convertEntityToLobbyGetDTO(lobby);
     }
 }

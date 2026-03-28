@@ -26,6 +26,28 @@ public class LobbyService {
         this.messagingTemplate = messagingTemplate;
     }
 
+    public Lobby getLobbyById(Long lobbyId) {
+        return lobbyRepository.findById(lobbyId)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Lobby " + lobbyId + " not found."
+            ));
+}
+
+    private void broadcastLobbyUpdate(Lobby lobby) {
+        LobbyWebSocketDTO dto = new LobbyWebSocketDTO();
+        dto.setLobbyId(lobby.getLobbyId());
+        dto.setStatus(lobby.getStatus());
+        dto.setJoinCode(lobby.getJoinCode());
+        dto.setHostId(lobby.getHost().getId());
+        dto.setJointUserIds(
+            lobby.getJointUsers().stream()
+                .map(User::getId)
+                .toList()
+        );
+        messagingTemplate.convertAndSend("/topic/lobby/" + lobby.getLobbyId(), dto);
+}
+
     public Lobby createLobby(Long hostId) {
         User host = userService.getUserById(hostId);
 
@@ -36,19 +58,7 @@ public class LobbyService {
 
         newLobby = lobbyRepository.save(newLobby);
         lobbyRepository.flush();
-
-        LobbyWebSocketDTO dto = new LobbyWebSocketDTO();
-        dto.setLobbyId(newLobby.getLobbyId());
-        dto.setStatus(newLobby.getStatus());
-        dto.setJoinCode(newLobby.getJoinCode());
-        dto.setHostId(newLobby.getHost().getId());
-        dto.setJointUserIds(
-            newLobby.getJointUsers().stream()
-                .map(User::getId)
-                .toList()
-                            );
-
-    messagingTemplate.convertAndSend("/topic/lobby/" + newLobby.getLobbyId(), dto);
+        broadcastLobbyUpdate(newLobby);
 
         return newLobby;
     }
@@ -90,7 +100,7 @@ public class LobbyService {
             lobby = lobbyRepository.save(lobby);
             lobbyRepository.flush();
         }
-
+        broadcastLobbyUpdate(lobby);
         return lobby;
     }
 
