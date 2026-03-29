@@ -2,6 +2,7 @@ package ch.uzh.ifi.hase.soprafs26.controller;
 
 
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +18,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyPutDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.LobbyDTOMapper;
 import ch.uzh.ifi.hase.soprafs26.service.LobbyService;
+
 
 @RestController
 public class LobbyController {
@@ -52,5 +54,13 @@ public class LobbyController {
     public LobbyGetDTO getLobby(@PathVariable Long lobbyId) {
         Lobby lobby = lobbyService.getLobbyById(lobbyId);
         return LobbyDTOMapper.INSTANCE.convertEntityToLobbyGetDTO(lobby);
+    }
+
+    @DeleteMapping("/lobbies/{lobbyId}/members/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void leaveLobby(
+        @PathVariable Long lobbyId,
+        @PathVariable Long userId) {
+    lobbyService.leaveLobby(lobbyId, userId);
     }
 }

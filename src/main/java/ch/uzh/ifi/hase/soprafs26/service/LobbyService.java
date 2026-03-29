@@ -111,4 +111,20 @@ public class LobbyService {
         } while (lobbyRepository.findByJoinCode(joinCode) != null); // Make sure its unique
         return joinCode;
     }
+
+    public void leaveLobby(Long lobbyId, Long userId) {
+        Lobby lobby = getLobbyById(lobbyId);
+
+        boolean isHost = lobby.getHost().getId().equals(userId);
+        if (isHost) {
+            lobby.setStatus(LobbyStatus.CLOSED);
+            lobby.getJointUsers().clear();
+        } else {
+            lobby.getJointUsers().removeIf(u -> u.getId().equals(userId));
+        }
+
+        lobby = lobbyRepository.save(lobby);
+        lobbyRepository.flush();
+        broadcastLobbyUpdate(lobby);
+    }
 }
