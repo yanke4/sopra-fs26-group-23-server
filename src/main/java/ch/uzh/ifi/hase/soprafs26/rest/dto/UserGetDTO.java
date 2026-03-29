@@ -7,6 +7,7 @@ public class UserGetDTO {
     private Long id;
     private String username;
     private Instant createdAt;
+    private String token;
 
     public Long getId() {
         return id;
@@ -31,4 +32,13 @@ public class UserGetDTO {
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
+    
+    public String getToken(){
+        return token;
+    }
+    
+    public void setToken(String token){
+        this.token = token; 
+    }
+    
 }

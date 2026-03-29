@@ -18,6 +18,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * User Service
@@ -75,13 +76,25 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }
 
+        String token = UUID.randomUUID().toString();
+        user.setToken(token);
+
+        userRepository.save(user);
+        userRepository.flush();
+
         return user;
     }
 
     // Legacy token-based endpoints are no longer backed by token persistence.
     // We keep this method to avoid breaking controller routes at compile time.
     public User authenticateUser(String token) {
-        User user = userRepository.findByUsername(token);
+
+        if (token == null){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token missing");
+        }
+
+        User user = userRepository.findByToken(token);
+    
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid authentication token");
         }
@@ -89,7 +102,11 @@ public class UserService {
     }
 
     public void logOutUser(Long id) {
-        getUserById(id);
+        User user = getUserById(id);
+        user.setToken(null);
+
+        userRepository.save(user);
+        userRepository.flush();
     }
 
     public void updateUser(Long id, UserPostDTO userPostDTO) {

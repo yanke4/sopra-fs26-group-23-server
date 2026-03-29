@@ -39,7 +39,9 @@ public class UserController {
 
 		// convert each user to the API representation
 		for (User user : users) {
-			userGetDTOs.add(UserDTOMapper.INSTANCE.convertEntityToUserGetDTO(user));
+			UserGetDTO userGetDTO = UserDTOMapper.INSTANCE.convertEntityToUserGetDTO(user);
+			userGetDTO.setToken(null);
+			userGetDTOs.add(userGetDTO);
 		}
 		return userGetDTOs;
 	}
@@ -48,20 +50,18 @@ public class UserController {
 	@ResponseStatus(HttpStatus.CREATED)
 	@ResponseBody
 	public UserGetDTO createUser(@RequestBody UserPostDTO userPostDTO) {
-		// convert API user to internal representation
 		User userInput = UserDTOMapper.INSTANCE.convertUserPostDTOtoEntity(userPostDTO);
-
-		// create user
 		User createdUser = userService.createUser(userInput);
-		// convert internal representation of user back to API
-		return UserDTOMapper.INSTANCE.convertEntityToUserGetDTO(createdUser);
+		UserGetDTO userGetDTO = UserDTOMapper.INSTANCE.convertEntityToUserGetDTO(createdUser);
+		userGetDTO.setToken(null);
+
+		return userGetDTO;
 	}
 
-	@PostMapping("/login")
+	@PostMapping("/auth/login")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public UserGetDTO loginUser(@RequestBody UserPostDTO userPostDTO){
-
 		User loginUser = userService.logInUser(userPostDTO);
 		return UserDTOMapper.INSTANCE.convertEntityToUserGetDTO(loginUser);
 	}
@@ -70,22 +70,19 @@ public class UserController {
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
 	public UserGetDTO getUserWithId(@PathVariable("id") Long id){
-
 		User userWithId = userService.getUserById(id);
-		return UserDTOMapper.INSTANCE.convertEntityToUserGetDTO(userWithId);
+		UserGetDTO userGetDTO = UserDTOMapper.INSTANCE.convertEntityToUserGetDTO(userWithId);
+		userGetDTO.setToken(null);
+		return userGetDTO;
 	}
 
-	@PostMapping("/users/{id}/logout")
+	@PostMapping("/auth/logout")
 	@ResponseStatus(HttpStatus.OK)
 	@ResponseBody
-	public void userLogout(@PathVariable("id") Long id, @RequestHeader("token") String token){
+	public void userLogout(@RequestHeader("token") String token){
 		User user = userService.authenticateUser(token);
 
-		if (!user.getId().equals(id)){
-			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You're not permitted to logout another user");
-		}
-
-		userService.logOutUser(id);
+		userService.logOutUser(user.getId());
 	}
 
 	@PutMapping("/users/{id}")

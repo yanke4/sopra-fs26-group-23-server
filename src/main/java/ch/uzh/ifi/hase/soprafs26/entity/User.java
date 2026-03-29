@@ -35,6 +35,9 @@ public class User implements Serializable {
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
+	@Column(nullable = true, unique = true)
+	private String token;
+
 	@PrePersist
 	protected void onCreate() {
 		if (this.createdAt == null) {
@@ -73,4 +76,13 @@ public class User implements Serializable {
 	public void setCreatedAt(Instant createdAt) {
 		this.createdAt = createdAt;
 	}
+
+	public String getToken() {
+		return token;
+	}
+
+	public void setToken(String token) {
+		this.token = token;
+	}
 }
+
