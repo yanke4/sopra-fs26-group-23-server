@@ -85,7 +85,6 @@ public class UserService {
         return user;
     }
 
-    // Legacy token-based endpoints are no longer backed by token persistence.
     // We keep this method to avoid breaking controller routes at compile time.
     public User authenticateUser(String token) {
 
