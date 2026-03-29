@@ -111,5 +111,4 @@ public class LobbyService {
         } while (lobbyRepository.findByJoinCode(joinCode) != null); // Make sure its unique
         return joinCode;
     }
-
 }
