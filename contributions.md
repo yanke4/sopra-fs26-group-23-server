@@ -51,8 +51,11 @@ reason).
 | **yanke4** | 28/03/2026  | [[Link to Commit 1]](https://github.com/yanke4/sopra-fs26-group-23-client/commit/f0d1bfc2b23b80dd97c29c04a2a227865da5fed3) | Created WebSocket for Lobby | The WebSocket is needed in order for the lobby page to be updated automatically |
 |                    | 28/03/2026   | [[Link to Commit 2]](https://github.com/yanke4/sopra-fs26-group-23-client/commit/0f58da2e6e329ae82ad6bd44e409d0c2d0848f71) | Broadcast users in lobby | new users automatically show up in lobby page |
 |                    | 29/03/2026   | [[Link to Commit 3]](https://github.com/yanke4/sopra-fs26-group-23-client/commit/83dbaebb62c5e30f71e9ff5363f508077b5cfa66) | Fix join lobby | Users can properly join Lobby via code |
-| **[@githubUser4]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **MatteoLozano** | 24.03.2026 | [[Link to Commit 1]](https://github.com/yanke4/sopra-fs26-group-23-server/commit/abd053b58944844f517a61c4821217b9a55adcfc) | Set up general server structure (as BeliaL) | Initial establishment of the server-side directory structure and Spring Boot configurations. |
+|                  | 25.03.2026 | [[Link to Commit 2]](https://github.com/yanke4/sopra-fs26-group-23-server/commit/9d6c5c7beb4609c11cd0488ac98f04e3676cb983) | Implement Lobby class (as BeliaL) | Designed the primary Lobby entity for data persistence. |
+|                  | 26.03.2026 | [[Link to Commit 3]](https://github.com/yanke4/sopra-fs26-group-23-server/commit/99464c7e137aa35e11f5da45c4a08b3f340ca014) | Implement LobbyDTO objects (as BeliaL)| Created DTOs to safely expose lobby data to the client via the REST API. |
+|                  | 28.03.2026 | [[Link to Commit 4]](https://github.com/yanke4/sopra-fs26-group-23-server/commit/1ab133e08f8ee20335e9413244bec37e30865cd0) | Finish Lobby service logic | Commit to close the task. Actual logic done before. |
+|                  | 30.03.2026 | [[Link to Commit 5]](https://github.com/yanke4/sopra-fs26-group-23-server/commit/cf0b05167bef39a3066054687321fbaf4b853c5e) | Implement 6-digit PIN and host assignment #29 | Finalized unique PIN generation and automatic host assignment for session creators. |
 
 ---
 
