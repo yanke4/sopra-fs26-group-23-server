@@ -42,10 +42,12 @@ reason).
 |                    |29.03.2026| [Commit6]([text](https://github.com/yanke4/sopra-fs26-group-23-server/commit/13182fc950b6c5cd29733648e5a9691dde966300))  | Removed email field in profile and register | We only want to use the username |
 |                    |29.03.2026| [Commit7] ([text](https://github.com/yanke4/sopra-fs26-group-23-server/commit/5ab4737a907951ebb9b4b5affde86408be2dab60)) | Authentication for the registration | A person that registers for the first time needs to have a token to be able to logout |
 |                    |29.03.2026| [Commmit8] ([text](https://github.com/yanke4/sopra-fs26-group-23-client/commit/31b54ee6e088b0a882c124d8e7091dcf0f5b4840)) | Authentication for profile and working logout button #20 | When the user wants to see his profile, he needs to be authenticated because there's also the updatePassword option|
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
-| **[@githubUser2]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
-|                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
+| **devnida** | 24/03/2026   | [[Link to Commit 1]](https://github.com/yanke4/sopra-fs26-group-23-client/commit/9ed5c55b772e8f86408d606a76eeb79386fd5379) | Homepage UI | The homepage is needed to start a lobby, get informations and to access the profile. |
+|                    | 24/03/2026 | [[Link to Commit 2] ](https://github.com/yanke4/sopra-fs26-group-23-client/commit/9f2983c75635b8f81f456956145a2abff448b268)| Navbar UI| Add navbar to every page, which is useful to get to the relevant pages. |
+|                    | 24/03/2026   | [[Link to Commit 3] ](https://github.com/yanke4/sopra-fs26-group-23-client/commit/af18884e033678aa3ce8617e8c37a70508bf9470)| User profile UI  | User can access to personal informations and change password. |
+|                    | 28/03/2026   | [[Link to Commit 4] ](https://github.com/yanke4/sopra-fs26-group-23-client/commit/670eae16112f94611a06bd99d5ef43b664615dd7)| Fix responsiveness | Responsiveness is important so that the website looks good on every device.|
+|                    | 29/03/2026   | [[Link to Commit 5]](https://github.com/yanke4/sopra-fs26-group-23-client/commit/15b6212981a6c2c8b4328a7c64ed02821c5d25fd) | Login page UI | This page is relevant in order to allow users to login. |
+|                    | 29/03/2026   | [[Link to Commit 6]](https://github.com/yanke4/sopra-fs26-group-23-client/commit/0cbbb3a0267447e380edbe40544b0e54a48a28db) | Register page UI | This page is relevant in order to allow users to register. |
 | **[@githubUser3]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 | **[@githubUser4]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
