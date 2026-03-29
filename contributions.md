@@ -30,7 +30,7 @@ reason).
 
 ---
 
-## Contributions Week 1 - [Begin Date] to [End Date]
+## Contributions Week 1 - 23/03/2026 to 30/03/2026
 
 | **Student**        | **Date** | **Link to Commit**                | **Description**                 | **Relevance**                       |
 | ------------------ | -------- | ----------------------------------| ------------------------------- | ----------------------------------- |
