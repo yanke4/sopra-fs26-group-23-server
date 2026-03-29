@@ -50,7 +50,7 @@ reason).
 |                    | 29/03/2026   | [[Link to Commit 6]](https://github.com/yanke4/sopra-fs26-group-23-client/commit/0cbbb3a0267447e380edbe40544b0e54a48a28db) | Register page UI | This page is relevant in order to allow users to register. |
 | **yanke4** | 28/03/2026  | [[Link to Commit 1]](https://github.com/yanke4/sopra-fs26-group-23-client/commit/f0d1bfc2b23b80dd97c29c04a2a227865da5fed3) | Created WebSocket for Lobby | The WebSocket is needed in order for the lobby page to be updated automatically |
 |                    | 28/03/2026   | [[Link to Commit 2]](https://github.com/yanke4/sopra-fs26-group-23-client/commit/0f58da2e6e329ae82ad6bd44e409d0c2d0848f71) | Broadcast users in lobby | new users automatically show up in lobby page |
-| 29/03/2026   | [[Link to Commit 3]](https://github.com/yanke4/sopra-fs26-group-23-client/commit/83dbaebb62c5e30f71e9ff5363f508077b5cfa66) | Fix join lobby | Users can properly join Lobby via code |
+|                    | 29/03/2026   | [[Link to Commit 3]](https://github.com/yanke4/sopra-fs26-group-23-client/commit/83dbaebb62c5e30f71e9ff5363f508077b5cfa66) | Fix join lobby | Users can properly join Lobby via code |
 | **[@githubUser4]** | [date]   | [Link to Commit 1] | [Brief description of the task] | [Why this contribution is relevant] |
 |                    | [date]   | [Link to Commit 2] | [Brief description of the task] | [Why this contribution is relevant] |
 
