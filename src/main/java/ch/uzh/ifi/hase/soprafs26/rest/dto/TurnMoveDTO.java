@@ -24,13 +24,13 @@ public class TurnMoveDTO {
 
     public static class Move{
         private String fromField;
-        private int troops;
+        private Long troops;
         private String toField;
 
         public String getFromField() {
             return fromField;
         }
-        public int getTroops() {
+        public Long getTroops() {
             return troops;
         }
         public String getToField() {

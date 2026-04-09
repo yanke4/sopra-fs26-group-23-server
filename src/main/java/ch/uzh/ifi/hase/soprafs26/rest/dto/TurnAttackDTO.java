@@ -25,13 +25,13 @@ public class TurnAttackDTO {
     }
     public static class Attack{
         private String attackingField;
-        private int troops;
+        private Long troops;
         private String defendingField;
 
         public String getAttackingField() {
             return attackingField;
         }
-        public int getTroops() {
+        public Long getTroops() {
             return troops;
         }
         public String getDefendingField() {

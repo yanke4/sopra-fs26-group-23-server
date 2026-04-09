@@ -24,13 +24,13 @@ public class TurnDeployDTO {
     
     public static class Deployment{
         private String fieldName;
-        private int troops;
+        private Long troops;
 
         public String getFieldName() {
             return fieldName;
         }
 
-        public int getTroops() {
+        public Long getTroops() {
             return troops;
         }
 
