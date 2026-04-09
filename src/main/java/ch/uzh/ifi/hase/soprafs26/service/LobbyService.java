@@ -127,4 +127,27 @@ public class LobbyService {
         lobbyRepository.flush();
         broadcastLobbyUpdate(lobby);
     }
+
+    public void startGame(Long lobbyId, Long userId){
+        Lobby lobby = getLobbyById(lobbyId);
+        
+        if (!lobby.getHost().getId().equals(userId)) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "Only the host can start the game."
+            );
+        }
+
+        if (lobby.getJointUsers().size() < 1) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "At least 2 players are required to start the game."
+            );
+        }
+
+        lobby.setStatus(LobbyStatus.CLOSED);
+        lobby = lobbyRepository.save(lobby);
+        lobbyRepository.flush();
+        broadcastLobbyUpdate(lobby);
+    }
 }

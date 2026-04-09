@@ -63,4 +63,12 @@ public class LobbyController {
         @PathVariable Long userId) {
     lobbyService.leaveLobby(lobbyId, userId);
     }
+
+    @PutMapping("/lobbies/{lobbyId}/start")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void startGame(
+        @PathVariable Long lobbyId,
+        @RequestBody LobbyPutDTO lobbyPutDTO) {
+    lobbyService.startGame(lobbyId, lobbyPutDTO.getUserId());
+    }
 }

@@ -17,7 +17,7 @@ public class FieldService {
     }
 
     public Field getFieldByName(String fieldName, Long gameId){
-        Game game = gameRepository.findById(gameId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found.");
+        Game game = gameRepository.findById(gameId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found."));
 
         if (fieldName == null){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Field not found.");
@@ -37,6 +37,7 @@ public class FieldService {
             }
             
         }
+        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Field not found.");
     }
     
     public void addUnits(String fieldName, Long troops, Long gameId){
