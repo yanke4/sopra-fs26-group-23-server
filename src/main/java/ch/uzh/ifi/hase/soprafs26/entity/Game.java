@@ -9,6 +9,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.util.List;
+
+import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
 

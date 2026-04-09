@@ -18,6 +18,10 @@ public class Player implements Serializable {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "game_id", nullable = false)
+    private Game game;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lobby_id", nullable = false)
     private Lobby lobby;
 
@@ -48,4 +52,8 @@ public class Player implements Serializable {
 
     public boolean isAlive() { return alive; }
     public void setAlive(boolean alive) { this.alive = alive; }
+
+    public void setGame(Game game) {
+        this.game = game; 
+    }
 }
