@@ -32,9 +32,6 @@ public class Game implements Serializable {
     @OneToOne(cascade = CascadeType.ALL) 
     private Map map;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    private Turn currentTurn;
-
     @Column 
     private int currentPlayerIndex;
 
@@ -72,14 +69,6 @@ public class Game implements Serializable {
 
     public void setMap(Map map) {
         this.map = map;
-    }
-
-    public Turn getCurrentTurn() {
-        return currentTurn;
-    }
-
-    public void setCurrentTurn(Turn currentTurn) {
-        this.currentTurn = currentTurn;
     }
 
     public int getCurrentPlayerIndex() {

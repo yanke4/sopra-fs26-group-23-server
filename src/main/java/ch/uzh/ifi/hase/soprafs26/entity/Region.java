@@ -52,7 +52,7 @@ public class Region implements Serializable {
     }
 
     public List<Field> getFields() {
-    return fields;
+        return fields;
     }
 
     public void setFields(List<Field> fields) {

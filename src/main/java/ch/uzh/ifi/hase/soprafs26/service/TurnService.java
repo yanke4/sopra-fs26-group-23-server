@@ -15,12 +15,21 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.springframework.stereotype.Service;
+
+@Service
 public class TurnService {
+
+    private final FieldService fieldService;
+    public TurnService(FieldService fieldService) {
+        this.fieldService = fieldService;
+    }
+
     public void deployUnits(TurnDeployDTO turnDeployDTO, Long gameId) {
         for (Deployment deployment : turnDeployDTO.getDeployments()) {
             String fieldName = deployment.getFieldName();
             Long troops = deployment.getTroops();
-            FieldService.addUnits(fieldName, troops, gameId);
+            fieldService.addUnits(fieldName, troops, gameId);
         }
         //Actualize Game state and send update to clients via WebSocket (not implemented yet)
 
@@ -28,8 +37,8 @@ public class TurnService {
 
     public void attack(TurnAttackDTO turnAttackDTO, Long gameId) {
         for (Attack attack: turnAttackDTO.getAttacks()) {
-            Field attackingField = FieldService.getFieldByName(attack.getAttackingField(), gameId);
-            Field defendingField = FieldService.getFieldByName(attack.getDefendingField(), gameId);
+            Field attackingField = fieldService.getFieldByName(attack.getAttackingField(), gameId);
+            Field defendingField = fieldService.getFieldByName(attack.getDefendingField(), gameId);
             Long attackingTroops = attack.getTroops();
             Long defendingTroops = defendingField.getTroops();
             //attack logic: 
@@ -39,9 +48,9 @@ public class TurnService {
             int comparisons = Math.min(attackerRolls.size(), defenderRolls.size());
             for (int i = 0; i < comparisons; i++) {
                 if (attackerRolls.get(i) > defenderRolls.get(i)) {
-                    FieldService.removeUnits(defendingField.getName(), 1, gameId);
+                    fieldService.removeUnits(defendingField.getName(), 1L, gameId);
                 } else {
-                    FieldService.removeUnits(attackingField.getName(), 1, gameId);
+                    fieldService.removeUnits(attackingField.getName(), 1L, gameId);
                 }
             }
         }
@@ -53,8 +62,8 @@ public class TurnService {
             String fromFieldName = move.getFromField();
             String toFieldName = move.getToField();
             Long troops = move.getTroops();
-            FieldService.removeUnits(fromFieldName, troops, gameId);
-            FieldService.addUnits(toFieldName, troops, gameId);
+            fieldService.removeUnits(fromFieldName, troops, gameId);
+            fieldService.addUnits(toFieldName, troops, gameId);
         }
         //Actualize Game state and send update to clients via WebSocket (not implemented yet)
     }
