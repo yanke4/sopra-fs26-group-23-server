@@ -15,11 +15,13 @@ import jakarta.persistence.OneToMany;
 @Table(name = "REGION")
 public class Region implements Serializable {
 
-    private static final int Bonusamount = 5;
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long regionID;
+
+    private String name;
+
+    private int bonusAmount;
 
     @ManyToOne
     private Map map; 
@@ -39,12 +41,24 @@ public class Region implements Serializable {
         return true;
     }
 
-    public int getBonusamount() {
-        return Bonusamount;
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getBonusAmount() {
+        return bonusAmount;
+    }
+
+    public void setBonusAmount(int bonusAmount) {
+        this.bonusAmount = bonusAmount;
     }
 
     public Map getMap() {
-        return map; 
+        return map;
     }
 
     public void setMap(Map map){

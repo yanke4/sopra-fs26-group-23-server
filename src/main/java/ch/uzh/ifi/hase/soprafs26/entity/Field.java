@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 
@@ -24,7 +25,7 @@ public class Field implements Serializable{
     private Player owner; 
     @ManyToOne
     private Region region;
-    @ManyToOne 
+    @ManyToMany
     private List<Field> neighbours; 
 
 

@@ -18,11 +18,13 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyWebSocketDTO;
 public class LobbyService {
     private final LobbyRepository lobbyRepository;
     private final UserService userService;
+    private final GameService gameService;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public LobbyService(LobbyRepository lobbyRepository, UserService userService, SimpMessagingTemplate messagingTemplate) {
+    public LobbyService(LobbyRepository lobbyRepository, UserService userService, GameService gameService, SimpMessagingTemplate messagingTemplate) {
         this.lobbyRepository = lobbyRepository;
         this.userService = userService;
+        this.gameService = gameService;
         this.messagingTemplate = messagingTemplate;
     }
 
@@ -149,5 +151,7 @@ public class LobbyService {
         lobby = lobbyRepository.save(lobby);
         lobbyRepository.flush();
         broadcastLobbyUpdate(lobby);
+
+        gameService.createGame(lobby);
     }
 }
