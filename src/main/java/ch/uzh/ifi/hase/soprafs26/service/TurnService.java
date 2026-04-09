@@ -50,8 +50,8 @@ public class TurnService {
 
     public void moveUnits(TurnMoveDTO turnMoveDTO, Long gameId) {
         for (Move move : turnMoveDTO.getMoves()) {
-            String fromFieldName = move.getFromFieldName();
-            String toFieldName = move.getToFieldName();
+            String fromFieldName = move.getFromField();
+            String toFieldName = move.getToField();
             Long troops = move.getTroops();
             FieldService.removeUnits(fromFieldName, troops, gameId);
             FieldService.addUnits(toFieldName, troops, gameId);
