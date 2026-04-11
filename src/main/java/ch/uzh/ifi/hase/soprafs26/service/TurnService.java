@@ -86,6 +86,7 @@ public class TurnService {
         if (defendingTroops == 0) {
             attackingField.setTroops(1L);
             defendingField.setTroops(attackingTroops-1L);
+            defendingField.setOwner(attackingField.getOwner());
     
         } else {
             attackingField.setTroops(1L);
