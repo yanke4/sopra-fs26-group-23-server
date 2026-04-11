@@ -1,6 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 import ch.uzh.ifi.hase.soprafs26.entity.Field;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
+import ch.uzh.ifi.hase.soprafs26.entity.Player;
 import ch.uzh.ifi.hase.soprafs26.entity.Region;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
 
@@ -38,6 +39,35 @@ public class FieldService {
             
         }
         throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Field not found.");
+    }
+
+    public int countTerritoriesOwnedByPlayer(Long gameId, Player player){
+        Game game = gameRepository.findById(gameId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found."));
+        
+        if (player == null || player.getPlayerId() == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Player not found.");
+        }
+
+        if (game.getMap() == null ||game.getMap().getRegions() == null){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Game map not found.");
+        }
+
+        int territoriesOwned = 0;
+
+        for (Region region : game.getMap().getRegions()){
+            if(region.getFields() == null){
+                continue; 
+            }
+            for (Field field : region.getFields()){
+                if(field.getOwner() != null 
+                && field.getOwner().getPlayerId() != null 
+                && field.getOwner().getPlayerId().equals(player.getPlayerId())){
+                territoriesOwned++;
+                }
+            }
+            
+        }
+        return territoriesOwned;
     }
     
     public void addUnits(String fieldName, Long troops, Long gameId){

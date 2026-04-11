@@ -21,7 +21,7 @@ public class Region implements Serializable {
 
     private String name;
 
-    private int bonusAmount;
+    private final int bonusAmount = 5;
 
     @ManyToOne
     private Map map; 
@@ -51,10 +51,6 @@ public class Region implements Serializable {
 
     public int getBonusAmount() {
         return bonusAmount;
-    }
-
-    public void setBonusAmount(int bonusAmount) {
-        this.bonusAmount = bonusAmount;
     }
 
     public Map getMap() {
