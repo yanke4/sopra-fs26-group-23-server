@@ -63,18 +63,34 @@ public class TurnService {
         }
             Long attackingTroops = attack.getTroops();
             Long defendingTroops = defendingField.getTroops();
+            Long attackingLosses = 0L;
+            Long defendingLosses = 0L;
             //attack logic: 
+        while (defendingTroops > 0 && attackingTroops > 1) {
             List<Integer> attackerRolls = rollDices(attackingTroops, 3);
             List<Integer> defenderRolls = rollDices(defendingTroops, 2);
 
             int comparisons = Math.min(attackerRolls.size(), defenderRolls.size());
             for (int i = 0; i < comparisons; i++) {
                 if (attackerRolls.get(i) > defenderRolls.get(i)) {
-                    fieldService.removeUnits(defendingField.getName(), 1L, gameId);
+                    defendingLosses += 1L;
+                    defendingTroops -= 1L;
+
                 } else {
-                    fieldService.removeUnits(attackingField.getName(), 1L, gameId);
+                    attackingLosses += 1L;
+                    attackingTroops -= 1L;
                 }
             }
+        }
+
+        if (defendingTroops == 0) {
+            attackingField.setTroops(1L);
+            defendingField.setTroops(attackingTroops-1L);
+    
+        } else {
+            attackingField.setTroops(1L);
+            defendingField.setTroops(defendingTroops);
+        }
         }
         //Actualize Game state and send update to clients via WebSocket (not implemented yet)
     }
