@@ -37,4 +37,5 @@ public class RegionService {
         }
         return regionBonus;
 
+    }  
 }

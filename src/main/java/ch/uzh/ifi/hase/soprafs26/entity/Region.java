@@ -53,6 +53,10 @@ public class Region implements Serializable {
         return bonusAmount;
     }
 
+    public int setBonusAmount(int bonusAmount) {
+        return bonusAmount;
+    }
+
     public Map getMap() {
         return map;
     }
