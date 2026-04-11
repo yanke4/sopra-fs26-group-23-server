@@ -12,6 +12,9 @@ import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.LobbyRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyWebSocketDTO;
 
+import ch.uzh.ifi.hase.soprafs26.entity.Game;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameStartDTO;
+
 
 @Service
 @Transactional
@@ -152,6 +155,14 @@ public class LobbyService {
         lobbyRepository.flush();
         broadcastLobbyUpdate(lobby);
 
-        gameService.createGame(lobby);
+        Game game  = gameService.createGame(lobby);
+        broadcastGameStarted(lobby.getLobbyId(), game.getId());
+    }
+    
+    private void broadcastGameStarted(Long lobbyId, Long gameId) {
+        GameStartDTO dto = new GameStartDTO();
+        dto.setLobbyId(lobbyId);
+        dto.setGameId(gameId);
+        messagingTemplate.convertAndSend("/topic/lobby/" + lobbyId, dto);
     }
 }

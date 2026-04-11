@@ -23,16 +23,73 @@ import ch.uzh.ifi.hase.soprafs26.entity.Player;
 import ch.uzh.ifi.hase.soprafs26.entity.Region;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
+import java.util.stream.Collectors;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameStateDTO;
 
 @Service
 @Transactional
 public class GameService {
 
     private final GameRepository gameRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public GameService(GameRepository gameRepository) {
+    public GameService(GameRepository gameRepository, SimpMessagingTemplate messagingTemplate) {
         this.gameRepository = gameRepository;
+        this.messagingTemplate = messagingTemplate;
     }
+
+    //update game state broadcaster for turn actions
+    public void broadcasGameUpdate(Long gameId){
+        Game game = gameRepository.findById(gameId)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Game " + gameId + " not found."
+            ));
+        broadcastGameState(game);
+    }
+
+    public void broadcastGameState(Game game) {
+        GameStateDTO gameStateDTO = convertToGameStateDTO(game);
+        messagingTemplate.convertAndSend("/topic/game/" + game.getId(), gameStateDTO);
+        }
+
+    //helper method to convert Game entity to GameStateDTO
+    private GameStateDTO convertToGameStateDTO(Game game) {
+        GameStateDTO gameStateDTO = new GameStateDTO();
+        gameStateDTO.setGameId(game.getId());
+        gameStateDTO.setStatus(game.getStatus());
+        gameStateDTO.setCurrentPlayerIndex(game.getCurrentPlayerIndex());
+        gameStateDTO.setCurrentPlayerId(game.getCurrentPlayer() != null ? game.getCurrentPlayer().getPlayerId() : null);
+
+        gameStateDTO.setPlayers(
+            game.getPlayerOrder().stream().map(player -> {
+                GameStateDTO.PlayerStateDTO playerDTO = new GameStateDTO.PlayerStateDTO();
+                playerDTO.setPlayerId(player.getPlayerId());
+                playerDTO.setUserId(player.getUser().getId());
+                playerDTO.setUsername(player.getUser().getUsername());
+                playerDTO.setColor(player.getColor());
+                playerDTO.setAlive(player.isAlive());
+                playerDTO.setTroopCount(player.getTroopCount());
+                return playerDTO;
+            }).collect(Collectors.toList())
+        );
+        gameStateDTO.setFields(
+            game.getMap().getRegions().stream()
+                .flatMap(region -> region.getFields().stream())
+                .map(field -> {
+                    GameStateDTO.FieldStateDTO fieldDTO = new GameStateDTO.FieldStateDTO();
+                    fieldDTO.setFieldName(field.getName());
+                    fieldDTO.setOwnerPlayerId(field.getOwner() != null ? field.getOwner().getPlayerId() : null);
+                    fieldDTO.setTroops(field.getTroops());
+                    return fieldDTO;
+                }).collect(Collectors.toList())
+        );
+        return gameStateDTO;     
+    }
+    
 
     public Game createGame(Lobby lobby) {
         Game game = new Game();
@@ -50,6 +107,7 @@ public class GameService {
         game = gameRepository.save(game);
         gameRepository.flush();
 
+        broadcastGameState(game);
         return game;
     }
 
@@ -72,7 +130,7 @@ public class GameService {
             player.setLobby(lobby);
             player.setColor(colors[i]);
             player.setAlive(true);
-            player.setTroopCount(0);
+            player.setTroopCount(0L); //inital troop count can be changed later
             players.add(player);
         }
 
