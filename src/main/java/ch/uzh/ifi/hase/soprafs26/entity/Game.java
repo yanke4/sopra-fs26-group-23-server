@@ -32,6 +32,7 @@ public class Game implements Serializable {
     @OneToOne(cascade = CascadeType.ALL) 
     private Map map;
 
+
     @Column 
     private int currentPlayerIndex;
 

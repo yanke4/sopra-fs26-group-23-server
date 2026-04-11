@@ -30,7 +30,7 @@ public class Player implements Serializable {
     private PlayerColor color;
 
     @Column(nullable = false)
-    private int troopCount = 0;
+    private Long troopCount = 0L;
 
     @Column(nullable = false)
     private boolean alive = true;
@@ -47,8 +47,8 @@ public class Player implements Serializable {
     public PlayerColor getColor() { return color; }
     public void setColor(PlayerColor color) { this.color = color; }
 
-    public int getTroopCount() { return troopCount; }
-    public void setTroopCount(int troopCount) { this.troopCount = troopCount; }
+    public Long getTroopCount() { return troopCount; }
+    public void setTroopCount(Long troopCount) { this.troopCount = troopCount; }
 
     public boolean isAlive() { return alive; }
     public void setAlive(boolean alive) { this.alive = alive; }

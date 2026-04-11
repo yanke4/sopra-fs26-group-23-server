@@ -16,12 +16,17 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnDeployDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnDeployDTO.Deployment;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnMoveDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnMoveDTO.Move;
+
+
 @Service
 public class TurnService {
 
     private final FieldService fieldService;
-    public TurnService(FieldService fieldService) {
+    private final GameService gameService;
+
+    public TurnService(FieldService fieldService, GameService gameService) {
         this.fieldService = fieldService;
+        this.gameService = gameService;
     }
 
     public void deployUnits(TurnDeployDTO turnDeployDTO, Long gameId) {
@@ -30,7 +35,9 @@ public class TurnService {
             Long troops = deployment.getTroops();
             fieldService.addUnits(fieldName, troops, gameId);
         }
-        //Actualize Game state and send update to clients via WebSocket (not implemented yet)
+        //Actualize Game state and send update to clients via WebSocket
+        gameService.broadcastGameUpdate(gameId);
+
 
     }
 
@@ -93,7 +100,8 @@ public class TurnService {
             defendingField.setTroops(defendingTroops);
         }
         }
-        //Actualize Game state and send update to clients via WebSocket (not implemented yet)
+        //Actualize Game state and send update to clients via WebSocket
+        gameService.broadcastGameUpdate(gameId);
     }
 
     public void moveUnits(TurnMoveDTO turnMoveDTO, Long gameId) {
@@ -104,7 +112,8 @@ public class TurnService {
             fieldService.removeUnits(fromFieldName, troops, gameId);
             fieldService.addUnits(toFieldName, troops, gameId);
         }
-        //Actualize Game state and send update to clients via WebSocket (not implemented yet)
+        //Actualize Game state and send update to clients via WebSocket
+        gameService.broadcastGameUpdate(gameId);
     }
 
     // helper method to roll dices for attack
