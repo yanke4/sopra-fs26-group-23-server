@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Field;
 import ch.uzh.ifi.hase.soprafs26.entity.Player;
+import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnAttackDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnAttackDTO.Attack;
@@ -36,9 +37,23 @@ public class TurnService {
     }
 
     public void deployUnits(TurnDeployDTO turnDeployDTO, Long gameId) {
+        Game game = gameRepository.findById(gameId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found."));
+        Player activePlayer = game.getCurrentPlayer();
+        if (activePlayer == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No active player found for the game.");
+        }
+        if (!activePlayer.getPlayerId().equals(turnDeployDTO.getPlayerId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "It's not player " + turnDeployDTO.getPlayerId() + "'s turn.");
+        }
+
         for (Deployment deployment : turnDeployDTO.getDeployments()) {
             String fieldName = deployment.getFieldName();
             Long troops = deployment.getTroops();
+
+            Field field = fieldService.getFieldByName(fieldName, gameId);
+            if (field.getOwner() == null || !field.getOwner().getPlayerId().equals(activePlayer.getPlayerId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Player " + activePlayer.getPlayerId() + " does not own the territory: " + fieldName);
+            }
             fieldService.addUnits(fieldName, troops, gameId);
         }
         //Actualize Game state and send update to clients via WebSocket
@@ -112,10 +127,31 @@ public class TurnService {
     }
 
     public void moveUnits(TurnMoveDTO turnMoveDTO, Long gameId) {
+
+        Game game = gameRepository.findById(gameId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found."));
+        Player activePlayer = game.getCurrentPlayer();
+        if (activePlayer == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No active player found for the game.");
+        }
+        if (!activePlayer.getPlayerId().equals(turnMoveDTO.getPlayerId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "It's not player " + turnMoveDTO.getPlayerId() + "'s turn.");
+        }
+
         for (Move move : turnMoveDTO.getMoves()) {
             String fromFieldName = move.getFromField();
             String toFieldName = move.getToField();
             Long troops = move.getTroops();
+            Field fromField = fieldService.getFieldByName (fromFieldName, gameId);
+            Field toField = fieldService.getFieldByName(toFieldName, gameId);
+            if (fromField.getOwner() == null || !fromField.getOwner().getPlayerId().equals(activePlayer.getPlayerId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Player " + activePlayer.getPlayerId() + " does not own the territory: " + fromFieldName);
+            }
+
+            if (toField.getOwner() == null || !toField.getOwner().getPlayerId().equals(activePlayer.getPlayerId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Player " + activePlayer.getPlayerId() + " does not own the territory: " + toFieldName);
+            }
+
+
             fieldService.removeUnits(fromFieldName, troops, gameId);
             fieldService.addUnits(toFieldName, troops, gameId);
         }
