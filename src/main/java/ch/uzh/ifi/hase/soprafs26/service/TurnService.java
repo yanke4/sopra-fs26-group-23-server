@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Field;
+import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnAttackDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnAttackDTO.Attack;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnDeployDTO;
@@ -23,10 +24,12 @@ public class TurnService {
 
     private final FieldService fieldService;
     private final GameService gameService;
+    private final GameRepository gameRepository;
 
-    public TurnService(FieldService fieldService, GameService gameService) {
+    public TurnService(FieldService fieldService, GameService gameService, GameRepository gameRepository) {
         this.fieldService = fieldService;
         this.gameService = gameService;
+        this.gameRepository = gameRepository;
     }
 
     public void deployUnits(TurnDeployDTO turnDeployDTO, Long gameId) {
@@ -100,7 +103,8 @@ public class TurnService {
             defendingField.setTroops(defendingTroops);
         }
         }
-        //Actualize Game state and send update to clients via WebSocket
+
+        gameRepository.flush();
         gameService.broadcastGameUpdate(gameId);
     }
 
