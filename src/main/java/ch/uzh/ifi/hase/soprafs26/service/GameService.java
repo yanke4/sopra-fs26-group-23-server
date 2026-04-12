@@ -104,6 +104,8 @@ public class GameService {
 
         assignTerritories(map, players);
 
+        
+
         game = gameRepository.save(game);
         gameRepository.flush();
 

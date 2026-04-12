@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Field;
+import ch.uzh.ifi.hase.soprafs26.entity.Player;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnAttackDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnAttackDTO.Attack;
@@ -25,11 +26,13 @@ public class TurnService {
     private final FieldService fieldService;
     private final GameService gameService;
     private final GameRepository gameRepository;
+    private final RegionService regionService;
 
-    public TurnService(FieldService fieldService, GameService gameService, GameRepository gameRepository) {
+    public TurnService(FieldService fieldService, GameService gameService, GameRepository gameRepository, RegionService regionService) {
         this.fieldService = fieldService;
         this.gameService = gameService;
         this.gameRepository = gameRepository;
+        this.regionService = regionService;
     }
 
     public void deployUnits(TurnDeployDTO turnDeployDTO, Long gameId) {
@@ -129,6 +132,14 @@ public class TurnService {
         }
         rolls.sort(Collections.reverseOrder());
         return rolls;
+    }
+
+    // helper method to calculate the number of troops a player receives
+    private Long calculateReinforcements(Long gameId, Player player){
+        int territoryCount = fieldService.countTerritoriesOwnedByPlayer(gameId, player);
+        int reinforcementsFromTerritories = territoryCount * 5; 
+        int reinforcementsFromRegions = regionService.calculateRegionBonus(gameId, player);
+        return (long) reinforcementsFromTerritories +  (long)reinforcementsFromRegions;
     }
 
 }
