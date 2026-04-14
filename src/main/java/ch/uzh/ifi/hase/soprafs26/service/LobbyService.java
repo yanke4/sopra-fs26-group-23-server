@@ -133,9 +133,9 @@ public class LobbyService {
         broadcastLobbyUpdate(lobby);
     }
 
-    public void startGame(Long lobbyId, Long userId){
+    public GameStartDTO startGame(Long lobbyId, Long userId){
         Lobby lobby = getLobbyById(lobbyId);
-        
+
         if (!lobby.getHost().getId().equals(userId)) {
             throw new ResponseStatusException(
                 HttpStatus.FORBIDDEN,
@@ -150,13 +150,19 @@ public class LobbyService {
             );
         }
 
+        // Create game BEFORE closing lobby — if this fails, lobby stays OPEN
+        Game game = gameService.createGame(lobby);
+
         lobby.setStatus(LobbyStatus.CLOSED);
         lobby = lobbyRepository.save(lobby);
         lobbyRepository.flush();
-        broadcastLobbyUpdate(lobby);
 
-        Game game  = gameService.createGame(lobby);
         broadcastGameStarted(lobby.getLobbyId(), game.getId());
+
+        GameStartDTO dto = new GameStartDTO();
+        dto.setLobbyId(lobby.getLobbyId());
+        dto.setGameId(game.getId());
+        return dto;
     }
     
     private void broadcastGameStarted(Long lobbyId, Long gameId) {

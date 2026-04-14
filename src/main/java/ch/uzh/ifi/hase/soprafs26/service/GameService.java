@@ -91,8 +91,18 @@ public class GameService {
     }
     
 
+    private Long generateUniqueGameId() {
+        Random random = new Random();
+        Long id;
+        do {
+            id = 100000L + (long) (random.nextDouble() * 900000);
+        } while (gameRepository.existsById(id));
+        return id;
+    }
+
     public Game createGame(Lobby lobby) {
         Game game = new Game();
+        game.setId(generateUniqueGameId());
         game.setStatus(GameStatus.RUNNING);
         game.setCurrentPlayerIndex(0);
 

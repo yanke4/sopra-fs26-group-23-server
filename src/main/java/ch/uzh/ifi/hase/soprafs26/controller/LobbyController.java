@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameStartDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyPutDTO;
@@ -65,10 +66,11 @@ public class LobbyController {
     }
 
     @PutMapping("/lobbies/{lobbyId}/start")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void startGame(
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public GameStartDTO startGame(
         @PathVariable Long lobbyId,
         @RequestBody LobbyPutDTO lobbyPutDTO) {
-    lobbyService.startGame(lobbyId, lobbyPutDTO.getUserId());
+    return lobbyService.startGame(lobbyId, lobbyPutDTO.getUserId());
     }
 }
