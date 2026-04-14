@@ -41,6 +41,15 @@ public class GameService {
         this.messagingTemplate = messagingTemplate;
     }
 
+    public GameStateDTO getGameState(Long gameId) {
+        Game game = gameRepository.findById(gameId)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Game " + gameId + " not found."
+            ));
+        return convertToGameStateDTO(game);
+    }
+
     //update game state broadcaster for turn actions
     public void broadcastGameUpdate(Long gameId){
         Game game = gameRepository.findById(gameId)
