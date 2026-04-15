@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
 import ch.uzh.ifi.hase.soprafs26.entity.Field;
 import ch.uzh.ifi.hase.soprafs26.entity.Player;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
@@ -45,6 +46,9 @@ public class TurnService {
         if (!activePlayer.getPlayerId().equals(turnDeployDTO.getPlayerId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "It's not player " + turnDeployDTO.getPlayerId() + "'s turn.");
         }
+        if (game.getCurrentPhase() != GamePhase.DEPLOY) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot deploy outside of DEPLOY phase.");
+        }
 
         for (Deployment deployment : turnDeployDTO.getDeployments()) {
             String fieldName = deployment.getFieldName();
@@ -63,8 +67,17 @@ public class TurnService {
     }
 
     public void attack(TurnAttackDTO turnAttackDTO, Long gameId) {
+        Game game = gameRepository.findById(gameId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game not found."));
+        Player activePlayer = game.getCurrentPlayer();
+        if (activePlayer == null || !activePlayer.getPlayerId().equals(turnAttackDTO.getPlayerId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "It's not player " + turnAttackDTO.getPlayerId() + "'s turn.");
+        }
+        if (game.getCurrentPhase() != GamePhase.ATTACK) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot attack outside of ATTACK phase.");
+        }
+
         Long requestingPlayerId = turnAttackDTO.getPlayerId();
-        
+
         for (Attack attack: turnAttackDTO.getAttacks()) {
             Field attackingField = fieldService.getFieldByName(attack.getAttackingField(), gameId);
             Field defendingField = fieldService.getFieldByName(attack.getDefendingField(), gameId);
@@ -135,6 +148,9 @@ public class TurnService {
         }
         if (!activePlayer.getPlayerId().equals(turnMoveDTO.getPlayerId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "It's not player " + turnMoveDTO.getPlayerId() + "'s turn.");
+        }
+        if (game.getCurrentPhase() != GamePhase.FORTIFY) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot move troops outside of FORTIFY phase.");
         }
 
         for (Move move : turnMoveDTO.getMoves()) {

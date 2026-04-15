@@ -10,6 +10,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.util.List;
 
+import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
@@ -37,6 +38,9 @@ public class Game implements Serializable {
 
     @Enumerated(EnumType.STRING)
     private GameStatus status; //either waiting, running or finished
+
+    @Enumerated(EnumType.STRING)
+    private GamePhase currentPhase;
 
     public Player getCurrentPlayer(){
         if(playerOrder == null || playerOrder.isEmpty()) {
@@ -91,5 +95,12 @@ public class Game implements Serializable {
         this.status = status;
     }
 
+    public GamePhase getCurrentPhase() {
+        return currentPhase;
+    }
+
+    public void setCurrentPhase(GamePhase currentPhase) {
+        this.currentPhase = currentPhase;
+    }
 
 }

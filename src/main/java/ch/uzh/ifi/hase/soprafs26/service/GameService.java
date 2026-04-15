@@ -17,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.PlayerColor;
 import ch.uzh.ifi.hase.soprafs26.entity.Field;
@@ -50,6 +51,42 @@ public class GameService {
         return convertToGameStateDTO(game);
     }
 
+    public void advancePhase(Long gameId, Long playerId) {
+        Game game = gameRepository.findById(gameId)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Game " + gameId + " not found."));
+
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null || !currentPlayer.getPlayerId().equals(playerId)) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN, "It's not player " + playerId + "'s turn.");
+        }
+
+        GamePhase phase = game.getCurrentPhase();
+        switch (phase) {
+            case DEPLOY:
+                game.setCurrentPhase(GamePhase.ATTACK);
+                break;
+            case ATTACK:
+                game.setCurrentPhase(GamePhase.FORTIFY);
+                break;
+            case FORTIFY:
+                // Move to next alive player and reset to DEPLOY
+                int nextIndex = game.getCurrentPlayerIndex();
+                List<Player> players = game.getPlayerOrder();
+                do {
+                    nextIndex = (nextIndex + 1) % players.size();
+                } while (!players.get(nextIndex).isAlive() && nextIndex != game.getCurrentPlayerIndex());
+                game.setCurrentPlayerIndex(nextIndex);
+                game.setCurrentPhase(GamePhase.DEPLOY);
+                break;
+        }
+
+        gameRepository.save(game);
+        gameRepository.flush();
+        broadcastGameState(game);
+    }
+
     //update game state broadcaster for turn actions
     public void broadcastGameUpdate(Long gameId){
         Game game = gameRepository.findById(gameId)
@@ -72,6 +109,7 @@ public class GameService {
         gameStateDTO.setStatus(game.getStatus());
         gameStateDTO.setCurrentPlayerIndex(game.getCurrentPlayerIndex());
         gameStateDTO.setCurrentPlayerId(game.getCurrentPlayer() != null ? game.getCurrentPlayer().getPlayerId() : null);
+        gameStateDTO.setCurrentPhase(game.getCurrentPhase());
 
         gameStateDTO.setPlayers(
             game.getPlayerOrder().stream().map(player -> {
@@ -114,6 +152,7 @@ public class GameService {
         game.setId(generateUniqueGameId());
         game.setStatus(GameStatus.RUNNING);
         game.setCurrentPlayerIndex(0);
+        game.setCurrentPhase(GamePhase.DEPLOY);
 
         List<Player> players = createPlayers(lobby, game);
         game.setPlayerOrder(players);
