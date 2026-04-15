@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnAttackDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnDeployDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnMoveDTO;
+import ch.uzh.ifi.hase.soprafs26.service.GameService;
 import ch.uzh.ifi.hase.soprafs26.service.TurnService;
 
 @RestController
@@ -18,9 +19,11 @@ import ch.uzh.ifi.hase.soprafs26.service.TurnService;
 public class TurnController {
 
     private final TurnService turnService;
+    private final GameService gameService;
 
-    public TurnController(TurnService turnService) {
+    public TurnController(TurnService turnService, GameService gameService) {
         this.turnService = turnService;
+        this.gameService = gameService;
     }
 
     @PostMapping("/deploy")
@@ -42,5 +45,13 @@ public class TurnController {
     public void move(@PathVariable Long gameId,
                      @RequestBody TurnMoveDTO turnMoveDTO) {
         turnService.moveUnits(turnMoveDTO, gameId);
+    }
+
+    @PostMapping("/advance-phase")
+    @ResponseStatus(HttpStatus.OK)
+    public void advancePhase(@PathVariable Long gameId,
+                             @RequestBody java.util.Map<String, Long> body) {
+        Long playerId = body.get("playerId");
+        gameService.advancePhase(gameId, playerId);
     }
 }
