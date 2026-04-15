@@ -254,26 +254,46 @@ public class GameService {
 
         Collections.shuffle(allFields);
 
-        // each player gets 2 random territories
-        int index = 0;
+        // each player gets 2 non-adjacent territories with 2 and 3 troops
+        List<Field> available = new ArrayList<>(allFields);
         for (Player player : players) {
-            Field field1 = allFields.get(index++);
-            Field field2 = allFields.get(index++);
+            Field field1 = null;
+            Field field2 = null;
+
+            for (int i = 0; i < available.size() && field1 == null; i++) {
+                Field candidate1 = available.get(i);
+                for (int j = i + 1; j < available.size(); j++) {
+                    Field candidate2 = available.get(j);
+                    boolean areNeighbours = candidate1.getNeighbours() != null
+                        && candidate1.getNeighbours().stream()
+                            .anyMatch(n -> n.getName().equals(candidate2.getName()));
+                    if (!areNeighbours) {
+                        field1 = candidate1;
+                        field2 = candidate2;
+                        break;
+                    }
+                }
+            }
+
+            if (field1 == null || field2 == null) {
+                // fallback: take first two available if no non-adjacent pair found
+                field1 = available.get(0);
+                field2 = available.get(1);
+            }
+
+            available.remove(field1);
+            available.remove(field2);
+
             field1.setOwner(player);
             field2.setOwner(player);
-
-            // 5 troops total, min 1 per territory, rest random
-            Random random = new Random();
-            int troops1 = 1 + random.nextInt(4); // 1 to 4
-            int troops2 = 5 - troops1;           // remaining, at least 1
-            field1.setTroops((long) troops1);
-            field2.setTroops((long) troops2);
+            field1.setTroops(2L);
+            field2.setTroops(3L);
         }
 
         // remaining fields are neutral with 1 troop each
-        for (int i = index; i < allFields.size(); i++) {
-            allFields.get(i).setOwner(null);
-            allFields.get(i).setTroops(1L);
+        for (Field field : available) {
+            field.setOwner(null);
+            field.setTroops(1L);
         }
     }
 }
