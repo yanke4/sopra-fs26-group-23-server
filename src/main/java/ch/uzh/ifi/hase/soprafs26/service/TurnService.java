@@ -153,6 +153,10 @@ public class TurnService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot move troops outside of FORTIFY phase.");
         }
 
+        if (game.isMoveDoneThisTurn()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Player has already moved troops this turn.");
+        }
+
         for (Move move : turnMoveDTO.getMoves()) {
             String fromFieldName = move.getFromField();
             String toFieldName = move.getToField();
@@ -180,7 +184,9 @@ public class TurnService {
             fieldService.removeUnits(fromFieldName, troops, gameId);
             fieldService.addUnits(toFieldName, troops, gameId);
         }
-        //Actualize Game state and send update to clients via WebSocket
+        game.setMoveDoneThisTurn(true);
+        gameRepository.save(game);
+        gameRepository.flush();
         gameService.broadcastGameUpdate(gameId);
     }
 

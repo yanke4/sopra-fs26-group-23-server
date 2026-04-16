@@ -1,9 +1,9 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
+import java.util.List;
+
 import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.PlayerColor;
-
-import java.util.List;
 
 public class GameStateDTO {
     private Long gameId;
@@ -12,7 +12,11 @@ public class GameStateDTO {
     private Long currentPlayerId;
     private GamePhase currentPhase;
     private List<PlayerStateDTO> players;
-    private List<FieldStateDTO> fields; 
+    private List<FieldStateDTO> fields;
+    private boolean moveDoneThisTurn; 
+
+    public boolean isMoveDoneThisTurn() { return moveDoneThisTurn; }
+    public void setMoveDoneThisTurn(boolean moveDoneThisTurn) { this.moveDoneThisTurn = moveDoneThisTurn; }
 
     public static class PlayerStateDTO {
         private Long playerId;
@@ -21,6 +25,7 @@ public class GameStateDTO {
         private PlayerColor color;
         private boolean alive;
         private Long troopCount;
+        
 
         public Long getPlayerId() { return playerId; }
         public void setPlayerId(Long playerId) { this.playerId = playerId; }
@@ -34,6 +39,7 @@ public class GameStateDTO {
         public void setAlive(boolean alive) { this.alive = alive; }
         public Long getTroopCount() { return troopCount; }
         public void setTroopCount(Long troopCount) { this.troopCount = troopCount; }
+        
     }
 
     public static class FieldStateDTO {

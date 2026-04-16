@@ -72,6 +72,7 @@ public class GameService {
                 break;
             case FORTIFY:
                 // Move to next alive player and reset to DEPLOY
+                game.setMoveDoneThisTurn(false);
                 int nextIndex = game.getCurrentPlayerIndex();
                 List<Player> players = game.getPlayerOrder();
                 do {
@@ -110,6 +111,7 @@ public class GameService {
         gameStateDTO.setCurrentPlayerIndex(game.getCurrentPlayerIndex());
         gameStateDTO.setCurrentPlayerId(game.getCurrentPlayer() != null ? game.getCurrentPlayer().getPlayerId() : null);
         gameStateDTO.setCurrentPhase(game.getCurrentPhase());
+        gameStateDTO.setMoveDoneThisTurn(game.isMoveDoneThisTurn());
 
         gameStateDTO.setPlayers(
             game.getPlayerOrder().stream().map(player -> {

@@ -1,21 +1,18 @@
 package ch.uzh.ifi.hase.soprafs26.entity;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import java.io.Serializable;
 import java.util.List;
 
 import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
-
-import java.io.Serializable;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 
 
 @Entity
@@ -35,6 +32,9 @@ public class Game implements Serializable {
 
     @Column 
     private int currentPlayerIndex;
+
+    @Column
+    private boolean moveDoneThisTurn = false;
 
     @Enumerated(EnumType.STRING)
     private GameStatus status; //either waiting, running or finished
@@ -101,6 +101,14 @@ public class Game implements Serializable {
 
     public void setCurrentPhase(GamePhase currentPhase) {
         this.currentPhase = currentPhase;
+    }
+
+    public boolean isMoveDoneThisTurn() {
+        return moveDoneThisTurn;
+    }
+
+public void setMoveDoneThisTurn(boolean moveDoneThisTurn) {
+        this.moveDoneThisTurn = moveDoneThisTurn;
     }
 
 }
