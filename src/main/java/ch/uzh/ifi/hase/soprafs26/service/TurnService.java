@@ -11,8 +11,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
 import ch.uzh.ifi.hase.soprafs26.entity.Field;
-import ch.uzh.ifi.hase.soprafs26.entity.Player;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
+import ch.uzh.ifi.hase.soprafs26.entity.Player;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnAttackDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnAttackDTO.Attack;
@@ -167,7 +167,16 @@ public class TurnService {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Player " + activePlayer.getPlayerId() + " does not own the territory: " + toFieldName);
             }
 
+            if (!isConnectedThroughOwnedFields(fromField, toField, activePlayer)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No connected path of your territories from " + fromFieldName + " to " + toFieldName);
+            }
 
+            if (troops == null || troops <= 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Troops to move must be positive.");
+            }
+            if (fromField.getTroops() == null || fromField.getTroops() - troops < 1) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Must leave at least 1 troop on " + fromFieldName);
+            }
             fieldService.removeUnits(fromFieldName, troops, gameId);
             fieldService.addUnits(toFieldName, troops, gameId);
         }
@@ -194,4 +203,31 @@ public class TurnService {
         return (long) reinforcementsFromTerritories +  (long)reinforcementsFromRegions;
     }
 
+
+    private boolean isConnectedThroughOwnedFields(Field start, Field end, Player player) {
+    if (start.getFieldID().equals(end.getFieldID())) return true;
+
+    java.util.Set<Long> visited = new java.util.HashSet<>();
+    java.util.Queue<Field> queue = new java.util.LinkedList<>();
+    queue.add(start);
+    visited.add(start.getFieldID());
+
+    while (!queue.isEmpty()) {
+        Field current = queue.poll();
+        List<Field> neighbours = current.getNeighbours();
+        if (neighbours == null) continue;
+
+        for (Field neighbour : neighbours) {
+            if (visited.contains(neighbour.getFieldID())) continue;
+            if (neighbour.getOwner() == null 
+                    || !neighbour.getOwner().getPlayerId().equals(player.getPlayerId())) continue;
+
+            if (neighbour.getFieldID().equals(end.getFieldID())) return true;
+
+            visited.add(neighbour.getFieldID());
+            queue.add(neighbour);
+        }
+    }
+    return false;
+}
 }
