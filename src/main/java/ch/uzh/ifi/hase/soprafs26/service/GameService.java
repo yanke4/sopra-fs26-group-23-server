@@ -75,9 +75,10 @@ public class GameService {
                 game.setMoveDoneThisTurn(false);
                 int nextIndex = game.getCurrentPlayerIndex();
                 List<Player> players = game.getPlayerOrder();
+                int startIndex = nextIndex;
                 do {
                     nextIndex = (nextIndex + 1) % players.size();
-                } while (!players.get(nextIndex).isAlive() && nextIndex != game.getCurrentPlayerIndex());
+                } while (!players.get(nextIndex).isAlive() && nextIndex != startIndex);
                 game.setCurrentPlayerIndex(nextIndex);
                 game.setCurrentPhase(GamePhase.DEPLOY);
                 break;
