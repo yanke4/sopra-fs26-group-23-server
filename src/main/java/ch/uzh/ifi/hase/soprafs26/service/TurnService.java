@@ -103,11 +103,19 @@ public class TurnService {
         if (attackingField.getTroops() == null || attackingField.getTroops() < 2) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Need at least 2 troops on " + attack.getAttackingField() + " to attack.");
         }
-            Long attackingTroops = attack.getTroops();
-            Long defendingTroops = defendingField.getTroops();
-            Long attackingLosses = 0L;
-            Long defendingLosses = 0L;
-            //attack logic: 
+
+        Long originalTroops = attackingField.getTroops();
+        Long troopsUsed = attack.getTroops();
+
+        if (troopsUsed >= originalTroops) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "You must leave at least 1 troop behind.");
+            }
+            Long attackingTroops = troopsUsed;
+        Long defendingTroops = defendingField.getTroops(); 
+        
+        
+        //attack logic: 
         while (defendingTroops > 0 && attackingTroops > 1) {
             List<Integer> attackerRolls = rollDices(attackingTroops, 3);
             List<Integer> defenderRolls = rollDices(defendingTroops, 2);
@@ -115,23 +123,23 @@ public class TurnService {
             int comparisons = Math.min(attackerRolls.size(), defenderRolls.size());
             for (int i = 0; i < comparisons; i++) {
                 if (attackerRolls.get(i) > defenderRolls.get(i)) {
-                    defendingLosses += 1L;
                     defendingTroops -= 1L;
 
                 } else {
-                    attackingLosses += 1L;
                     attackingTroops -= 1L;
                 }
             }
         }
 
+        Long remaininOnAttackField = originalTroops - troopsUsed; 
+        attackingField.setTroops(remaininOnAttackField);
+
+
         if (defendingTroops == 0) {
-            attackingField.setTroops(1L);
-            defendingField.setTroops(attackingTroops-1L);
             defendingField.setOwner(attackingField.getOwner());
+            defendingField.setTroops(attackingTroops);
     
         } else {
-            attackingField.setTroops(1L);
             defendingField.setTroops(defendingTroops);
         }
         }
@@ -140,6 +148,7 @@ public class TurnService {
         checkAndHandleWinCondition(game);
         gameService.broadcastGameUpdate(gameId);
     }
+
 
     public void moveUnits(TurnMoveDTO turnMoveDTO, Long gameId) {
 
