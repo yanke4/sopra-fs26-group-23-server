@@ -28,6 +28,7 @@ public class ChatController {
 
     @PostMapping("/message")
     public ResponseEntity<Void> sendMessage(@RequestBody ChatMessageDTO chatMessageDTO) {
+        System.out.println("playerId in payload: " + String.valueOf(chatMessageDTO.getPlayerId()));
         Map<String, Object> payload = new HashMap();
         payload.put("playerId", String.valueOf(chatMessageDTO.getPlayerId()));
         payload.put("username", chatMessageDTO.getUsername());
