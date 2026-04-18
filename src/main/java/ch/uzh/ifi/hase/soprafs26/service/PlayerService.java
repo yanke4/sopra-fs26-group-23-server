@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
+import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.Field;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Player;
@@ -72,6 +73,16 @@ public class PlayerService {
 
         gameRepository.save(game);
         gameRepository.flush();
+        
+        long aliveCount = game.getPlayerOrder().stream()
+        .filter(Player::isAlive)
+        .count();
+
+        if (aliveCount <= 1) {
+            game.setStatus(GameStatus.FINISHED);
+            gameRepository.save(game);
+            gameRepository.flush();
+        }
 
         gameService.broadcastGameState(game);
     }

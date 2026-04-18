@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
+import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.Field;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Player;
@@ -136,6 +137,7 @@ public class TurnService {
         }
 
         gameRepository.flush();
+        checkAndHandleWinCondition(game);
         gameService.broadcastGameUpdate(gameId);
     }
 
@@ -189,6 +191,27 @@ public class TurnService {
         gameRepository.flush();
         gameService.broadcastGameUpdate(gameId);
     }
+
+    private void checkAndHandleWinCondition(Game game) {
+    for (Player player : game.getPlayerOrder()) {
+        if (player.isAlive()) {
+            int territoryCount = fieldService.countTerritoriesOwnedByPlayer(game.getId(), player);
+            if (territoryCount == 0) {
+                player.setAlive(false);
+            }
+        }
+    }
+
+    long aliveCount = game.getPlayerOrder().stream()
+            .filter(Player::isAlive)
+            .count();
+
+    if (aliveCount <= 1) {
+        game.setStatus(GameStatus.FINISHED);
+        gameRepository.save(game);
+        gameRepository.flush();
+    }
+}
 
     // helper method to roll dices for attack
     private List<Integer> rollDices(Long troopCount, int maxDice) {
