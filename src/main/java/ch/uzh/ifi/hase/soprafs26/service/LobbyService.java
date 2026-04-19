@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
@@ -172,7 +174,14 @@ public class LobbyService {
         lobby = lobbyRepository.save(lobby);
         lobbyRepository.flush();
 
-        broadcastGameStarted(lobby.getLobbyId(), game.getId());
+        final Long finalLobbyId = lobby.getLobbyId();
+        final Long finalGameId = game.getId();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                broadcastGameStarted(finalLobbyId, finalGameId);
+            }
+        });
 
         GameStartDTO dto = new GameStartDTO();
         dto.setLobbyId(lobby.getLobbyId());
