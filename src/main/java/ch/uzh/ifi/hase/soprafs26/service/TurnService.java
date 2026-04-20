@@ -51,6 +51,15 @@ public class TurnService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot deploy outside of DEPLOY phase.");
         }
 
+        long totalTroops = 0;
+        for (Deployment deployment : turnDeployDTO.getDeployments()) {
+            totalTroops += deployment.getTroops();
+        }
+        if (totalTroops > activePlayer.getTroopCount()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Cannot deploy more troops than available (" + activePlayer.getTroopCount() + " remaining).");
+        }
+
         for (Deployment deployment : turnDeployDTO.getDeployments()) {
             String fieldName = deployment.getFieldName();
             Long troops = deployment.getTroops();
@@ -61,6 +70,8 @@ public class TurnService {
             }
             fieldService.addUnits(fieldName, troops, gameId);
         }
+        activePlayer.setTroopCount(activePlayer.getTroopCount() - totalTroops);
+
         //Actualize Game state and send update to clients via WebSocket
         gameService.broadcastGameUpdate(gameId);
 

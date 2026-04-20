@@ -36,10 +36,21 @@ public class GameService {
 
     private final GameRepository gameRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final FieldService fieldService;
+    private final RegionService regionService;
 
-    public GameService(GameRepository gameRepository, SimpMessagingTemplate messagingTemplate) {
+    public GameService(GameRepository gameRepository, SimpMessagingTemplate messagingTemplate,
+                       FieldService fieldService, RegionService regionService) {
         this.gameRepository = gameRepository;
         this.messagingTemplate = messagingTemplate;
+        this.fieldService = fieldService;
+        this.regionService = regionService;
+    }
+
+    private long calculateReinforcements(Long gameId, Player player) {
+        int territoryCount = fieldService.countTerritoriesOwnedByPlayer(gameId, player);
+        int fromRegions = regionService.calculateRegionBonus(gameId, player);
+        return territoryCount * 5L + fromRegions;
     }
 
     public GameStateDTO getGameState(Long gameId) {
@@ -65,6 +76,10 @@ public class GameService {
         GamePhase phase = game.getCurrentPhase();
         switch (phase) {
             case DEPLOY:
+                if (currentPlayer.getTroopCount() > 0) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "You must deploy all remaining troops before advancing.");
+                }
                 game.setCurrentPhase(GamePhase.ATTACK);
                 break;
             case ATTACK:
@@ -81,6 +96,8 @@ public class GameService {
                 } while (!players.get(nextIndex).isAlive() && nextIndex != startIndex);
                 game.setCurrentPlayerIndex(nextIndex);
                 game.setCurrentPhase(GamePhase.DEPLOY);
+                Player nextPlayer = players.get(nextIndex);
+                nextPlayer.setTroopCount(calculateReinforcements(gameId, nextPlayer));
                 break;
         }
 
@@ -169,6 +186,9 @@ public class GameService {
 
         game = gameRepository.save(game);
         gameRepository.flush();
+
+        Player firstPlayer = game.getPlayerOrder().get(0);
+        firstPlayer.setTroopCount(calculateReinforcements(game.getId(), firstPlayer));
 
         broadcastGameState(game);
         return game;
