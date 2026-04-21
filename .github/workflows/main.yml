@@ -46,12 +46,23 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SERVICE_CREDENTIALS }}
 
+      - name: Configure Docker to use GCP credentials
+        run: gcloud auth configure-docker gcr.io --quiet
+
+      - name: Build Docker image
+        run: |
+          docker build -t gcr.io/sopra-fs26-group-23-server/sopra-fs26-group-23-server:latest .
+
+      - name: Push Docker image to GCR
+        run: |
+          docker push gcr.io/sopra-fs26-group-23-server/sopra-fs26-group-23-server:latest
+
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: sopra-fs26-group-23-server
           region: europe-west1
-          source: .
+          image: gcr.io/sopra-fs26-group-23-server/sopra-fs26-group-23-server:latest
           flags: >
             --allow-unauthenticated
             --port=8080
