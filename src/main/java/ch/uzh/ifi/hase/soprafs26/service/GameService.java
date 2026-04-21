@@ -92,6 +92,10 @@ public class GameService {
                     nextIndex = (nextIndex + 1) % players.size();
                 } while (!players.get(nextIndex).isAlive() && nextIndex != startIndex);
                 game.setCurrentPlayerIndex(nextIndex);
+                // A new turn starts when the play order wraps back to (or past) the previous player's index
+                if (nextIndex <= startIndex) {
+                    game.setTurnNumber(game.getTurnNumber() + 1);
+                }
                 game.setCurrentPhase(GamePhase.DEPLOY);
                 Player nextPlayer = players.get(nextIndex);
                 nextPlayer.setTroopCount(calculateReinforcements(gameId, nextPlayer));
@@ -127,6 +131,7 @@ public class GameService {
         gameStateDTO.setCurrentPlayerId(game.getCurrentPlayer() != null ? game.getCurrentPlayer().getPlayerId() : null);
         gameStateDTO.setCurrentPhase(game.getCurrentPhase());
         gameStateDTO.setMoveDoneThisTurn(game.isMoveDoneThisTurn());
+        gameStateDTO.setTurnNumber(game.getTurnNumber());
 
         gameStateDTO.setPlayers(
             game.getPlayerOrder().stream().map(player -> {
@@ -170,6 +175,7 @@ public class GameService {
         game.setStatus(GameStatus.RUNNING);
         game.setCurrentPlayerIndex(0);
         game.setCurrentPhase(GamePhase.DEPLOY);
+        game.setTurnNumber(1);
 
         List<Player> players = createPlayers(lobby, game);
         game.setPlayerOrder(players);

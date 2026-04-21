@@ -13,10 +13,14 @@ public class GameStateDTO {
     private GamePhase currentPhase;
     private List<PlayerStateDTO> players;
     private List<FieldStateDTO> fields;
-    private boolean moveDoneThisTurn; 
+    private boolean moveDoneThisTurn;
+    private int turnNumber;
 
     public boolean isMoveDoneThisTurn() { return moveDoneThisTurn; }
     public void setMoveDoneThisTurn(boolean moveDoneThisTurn) { this.moveDoneThisTurn = moveDoneThisTurn; }
+
+    public int getTurnNumber() { return turnNumber; }
+    public void setTurnNumber(int turnNumber) { this.turnNumber = turnNumber; }
 
     public static class PlayerStateDTO {
         private Long playerId;

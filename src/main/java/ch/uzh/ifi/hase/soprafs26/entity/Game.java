@@ -36,6 +36,9 @@ public class Game implements Serializable {
     @Column
     private boolean moveDoneThisTurn = false;
 
+    @Column
+    private int turnNumber = 1;
+
     @Enumerated(EnumType.STRING)
     private GameStatus status; //either waiting, running or finished
 
@@ -109,6 +112,14 @@ public class Game implements Serializable {
 
 public void setMoveDoneThisTurn(boolean moveDoneThisTurn) {
         this.moveDoneThisTurn = moveDoneThisTurn;
+    }
+
+    public int getTurnNumber() {
+        return turnNumber;
+    }
+
+    public void setTurnNumber(int turnNumber) {
+        this.turnNumber = turnNumber;
     }
 
 }
