@@ -36,21 +36,18 @@ public class GameService {
 
     private final GameRepository gameRepository;
     private final SimpMessagingTemplate messagingTemplate;
-    private final FieldService fieldService;
     private final RegionService regionService;
 
     public GameService(GameRepository gameRepository, SimpMessagingTemplate messagingTemplate,
-                       FieldService fieldService, RegionService regionService) {
+                       RegionService regionService) {
         this.gameRepository = gameRepository;
         this.messagingTemplate = messagingTemplate;
-        this.fieldService = fieldService;
         this.regionService = regionService;
     }
 
     private long calculateReinforcements(Long gameId, Player player) {
-        int territoryCount = fieldService.countTerritoriesOwnedByPlayer(gameId, player);
         int fromRegions = regionService.calculateRegionBonus(gameId, player);
-        return territoryCount * 5L + fromRegions;
+        return 5L + fromRegions;
     }
 
     public GameStateDTO getGameState(Long gameId) {
