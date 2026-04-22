@@ -49,7 +49,7 @@ public class GameService {
 
     private long calculateReinforcements(Long gameId, Player player) {
         int fromRegions = regionService.calculateRegionBonus(gameId, player);
-        return 5L + fromRegions;
+        return 4L + fromRegions;
     }
 
     public GameStateDTO getGameState(Long gameId) {
