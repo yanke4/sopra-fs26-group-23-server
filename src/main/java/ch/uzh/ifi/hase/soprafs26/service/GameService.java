@@ -4,8 +4,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -281,34 +283,35 @@ public class GameService {
         Collections.shuffle(allFields);
 
         // each player gets 2 non-adjacent territories with 2 and 3 troops
+        // additionally, no player's spawn may be adjacent to any other player's spawn
         List<Field> available = new ArrayList<>(allFields);
+        Set<String> claimedNames = new HashSet<>();
         for (Player player : players) {
-            Field field1 = null;
+            Field field1 = findSpawnPair(available, claimedNames, true);
             Field field2 = null;
 
-            for (int i = 0; i < available.size() && field1 == null; i++) {
-                Field candidate1 = available.get(i);
-                for (int j = i + 1; j < available.size(); j++) {
-                    Field candidate2 = available.get(j);
-                    boolean areNeighbours = candidate1.getNeighbours() != null
-                        && candidate1.getNeighbours().stream()
-                            .anyMatch(n -> n.getName().equals(candidate2.getName()));
-                    if (!areNeighbours) {
-                        field1 = candidate1;
-                        field2 = candidate2;
-                        break;
-                    }
+            if (field1 != null) {
+                field2 = findSpawnPartner(field1, available, claimedNames, true);
+            }
+
+            // fallback 1: relax cross-player non-adjacency, keep intra-player non-adjacency
+            if (field1 == null || field2 == null) {
+                field1 = findSpawnPair(available, claimedNames, false);
+                if (field1 != null) {
+                    field2 = findSpawnPartner(field1, available, claimedNames, false);
                 }
             }
 
+            // fallback 2: take any two remaining fields
             if (field1 == null || field2 == null) {
-                // fallback: take first two available if no non-adjacent pair found
                 field1 = available.get(0);
                 field2 = available.get(1);
             }
 
             available.remove(field1);
             available.remove(field2);
+            claimedNames.add(field1.getName());
+            claimedNames.add(field2.getName());
 
             field1.setOwner(player);
             field2.setOwner(player);
@@ -321,5 +324,40 @@ public class GameService {
             field.setOwner(null);
             field.setTroops(1L);
         }
+    }
+
+    private Field findSpawnPair(List<Field> available, Set<String> claimedNames,
+                                boolean avoidClaimedNeighbours) {
+        for (Field candidate : available) {
+            if (avoidClaimedNeighbours && isAdjacentToAny(candidate, claimedNames)) {
+                continue;
+            }
+            if (findSpawnPartner(candidate, available, claimedNames, avoidClaimedNeighbours) != null) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    private Field findSpawnPartner(Field first, List<Field> available, Set<String> claimedNames,
+                                   boolean avoidClaimedNeighbours) {
+        for (Field candidate : available) {
+            if (candidate == first) continue;
+            if (avoidClaimedNeighbours && isAdjacentToAny(candidate, claimedNames)) {
+                continue;
+            }
+            boolean adjacentToFirst = first.getNeighbours() != null
+                && first.getNeighbours().stream()
+                    .anyMatch(n -> n.getName().equals(candidate.getName()));
+            if (!adjacentToFirst) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    private boolean isAdjacentToAny(Field field, Set<String> names) {
+        if (names.isEmpty() || field.getNeighbours() == null) return false;
+        return field.getNeighbours().stream().anyMatch(n -> names.contains(n.getName()));
     }
 }
