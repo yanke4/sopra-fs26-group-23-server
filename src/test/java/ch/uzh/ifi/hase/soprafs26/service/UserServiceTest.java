@@ -98,7 +98,7 @@ public class UserServiceTest {
 
         assertThrows(ResponseStatusException.class, () -> userService.createUser(testUser));
     
-        Mockito.verify(userRepository, Mockito.any()).save(Mockito.any());
+        Mockito.verify(userRepository, Mockito.never()).save(Mockito.any());
     }
 
     @Test
@@ -172,8 +172,26 @@ public class UserServiceTest {
         assertThrows(ResponseStatusException.class, () -> userService.logInUser(dto));
 
         Mockito.verify(userRepository, Mockito.never()).save(Mockito.any());
+    }
 
+    @Test
+    public void loginUser_missingUsername_throwsException(){
+        UserPostDTO dto = new UserPostDTO();
+        dto.setPassword("plainPassword");
 
+        assertThrows(ResponseStatusException.class, () -> userService.logInUser(dto));
+
+        Mockito.verify(userRepository, Mockito.never()).save(Mockito.any());
+    }
+
+    @Test
+    public void loginUser_missingPassword_throwsException(){
+        UserPostDTO dto = new UserPostDTO();
+        dto.setUsername("testUsername");
+
+        assertThrows(ResponseStatusException.class, () -> userService.logInUser(dto));
+
+        Mockito.verify(userRepository, Mockito.never()).save(Mockito.any());
     }
 
     @Test 
@@ -184,9 +202,84 @@ public class UserServiceTest {
         Mockito.when(userRepository.findByToken("validToken"))
         .thenReturn(testUser);
 
-        User authenticatedUser = userRepository.findByToken("validToken");
+        User authenticatedUser = userService.authenticateUser("validToken");
 
         assertEquals(testUser.getUsername(), authenticatedUser.getUsername());
+
+        Mockito.verify(userRepository).findByToken("validToken");
+    }
+
+    @Test
+    public void authenticateUser_invalidToken_throwsException(){
+        Mockito.when(userRepository.findByToken("invalidToken"))
+        .thenReturn(null);
+
+        assertThrows(ResponseStatusException.class, () -> userService.authenticateUser("invalidToken"));    
+
+        Mockito.verify(userRepository, Mockito.never()).findByToken("invalidToken");
+    }
+
+    @Test
+    public void authenticateUser_missingToken_throwsException(){
+
+        assertThrows(ResponseStatusException.class, () -> userService.authenticateUser(null));
+        Mockito.verify(userRepository, Mockito.never()).findByToken(Mockito.any());
+    }
+
+    @Test
+    public void logOutUser_validInput_success(){
+        testUser.setToken("validToken");
+
+        Mockito.when(userRepository.findById(1L))
+        .thenReturn(Optional.of(testUser));
+
+        userService.logOutUser(1L);
+        assertNull(testUser.getToken());
+
+        Mockito.verify(userRepository).findById(1L);
+        Mockito.verify(userRepository).save(testUser);
+        Mockito.verify(userRepository).flush();
+    }
+
+    @Test
+    public void logOutUser_userNotFound_throwsException(){
+        Mockito.when(userRepository.findById(2L))
+        .thenReturn(Optional.empty());
+
+        assertThrows(ResponseStatusException.class, () -> userService.logOutUser(2L));
+
+        Mockito.verify(userRepository, Mockito.never()).save(Mockito.any());
+    }
+
+    @Test
+    public void updateUser_validInput_success() {
+
+        UserPostDTO dto = new UserPostDTO();
+        dto.setUsername("newUsername");
+        dto.setPassword("newPassword");
+
+        testUser.setId(1L);
+        testUser.setUsername("oldUsername");
+        testUser.setPasswordHash(hash("oldPassword"));
+        testUser.setToken("existingToken");
+
+        Mockito.when(userRepository.findById(1L))
+            .thenReturn(Optional.of(testUser));
+
+        Mockito.when(userRepository.findByUsername("newUsername"))
+            .thenReturn(null);
+
+        userService.updateUser(1L, dto);
+
+        assertEquals("newUsername", testUser.getUsername());
+
+        assertEquals(hash("newPassword"), testUser.getPasswordHash());
+
+        assertEquals("existingToken", testUser.getToken());
+
+        Mockito.verify(userRepository).findById(1L);
+        Mockito.verify(userRepository).save(testUser);
+        Mockito.verify(userRepository).flush();
     }
 
 }
