@@ -150,13 +150,43 @@ public class UserServiceTest {
         dto.setPassword("plainPassword");
 
         Mockito.when(userRepository.findByUsername("unknownUser"))
-        .thenReturn(null)
+        .thenReturn(null);
 
         assertThrows(ResponseStatusException.class, () -> userService.logInUser(dto));
         
         Mockito.verify(userRepository, Mockito.never()).save(Mockito.any());
     }
 
+    @Test
+    public void logInUser_wrongPassword_throwsException(){
 
+        UserPostDTO dto = new UserPostDTO();
+        dto.setUsername("testUsername");
+        dto.setPassword("plainPassword");
+
+        testUser.setPasswordHash("wrongPassword");
+
+        Mockito.when(userRepository.findByUsername("testUsername"))
+        .thenReturn(testUser);
+
+        assertThrows(ResponseStatusException.class, () -> userService.logInUser(dto));
+
+        Mockito.verify(userRepository, Mockito.never()).save(Mockito.any());
+
+
+    }
+
+    @Test 
+    public void authenticateUser_validToken_success(){
+
+        testUser.setToken("validToken");
+
+        Mockito.when(userRepository.findByToken("validToken"))
+        .thenReturn(testUser);
+
+        User authenticatedUser = userRepository.findByToken("validToken");
+
+        assertEquals(testUser.getUsername(), authenticatedUser.getUsername());
+    }
 
 }
