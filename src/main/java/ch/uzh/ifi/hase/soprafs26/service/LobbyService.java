@@ -1,19 +1,22 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
+import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.LobbyRepository;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyWebSocketDTO;
-
-import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.GameStartDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyWebSocketDTO;
 
 
 @Service
@@ -118,24 +121,38 @@ public class LobbyService {
     }
 
     public void leaveLobby(Long lobbyId, Long userId) {
-        Lobby lobby = getLobbyById(lobbyId);
+    Lobby lobby = getLobbyById(lobbyId);
 
-        boolean isHost = lobby.getHost().getId().equals(userId);
-        if (isHost) {
+    boolean isHost = lobby.getHost().getId().equals(userId);
+
+    if (isHost) {
+        if (lobby.getJointUsers().isEmpty()) {
             lobby.setStatus(LobbyStatus.CLOSED);
-            lobby.getJointUsers().clear();
         } else {
-            lobby.getJointUsers().removeIf(u -> u.getId().equals(userId));
+            
+            User newHost = lobby.getJointUsers().get(0);
+            lobby.setHost(newHost);
+            
+            List<User> remaining = new java.util.ArrayList<>(lobby.getJointUsers());
+            remaining.remove(0);
+            lobby.setJointUsers(remaining);
+           
         }
-
-        lobby = lobbyRepository.save(lobby);
-        lobbyRepository.flush();
-        broadcastLobbyUpdate(lobby);
+    } else {
+        List<User> remaining = lobby.getJointUsers().stream()
+            .filter(u -> !u.getId().equals(userId))
+            .collect(java.util.stream.Collectors.toList());
+        lobby.setJointUsers(remaining);
     }
 
-    public void startGame(Long lobbyId, Long userId){
+    lobby = lobbyRepository.save(lobby);
+    lobbyRepository.flush();
+    broadcastLobbyUpdate(lobby);
+}
+
+    public GameStartDTO startGame(Long lobbyId, Long userId){
         Lobby lobby = getLobbyById(lobbyId);
-        
+
         if (!lobby.getHost().getId().equals(userId)) {
             throw new ResponseStatusException(
                 HttpStatus.FORBIDDEN,
@@ -150,13 +167,26 @@ public class LobbyService {
             );
         }
 
+        // Create game BEFORE closing lobby — if this fails, lobby stays OPEN
+        Game game = gameService.createGame(lobby);
+
         lobby.setStatus(LobbyStatus.CLOSED);
         lobby = lobbyRepository.save(lobby);
         lobbyRepository.flush();
-        broadcastLobbyUpdate(lobby);
 
-        Game game  = gameService.createGame(lobby);
-        broadcastGameStarted(lobby.getLobbyId(), game.getId());
+        final Long finalLobbyId = lobby.getLobbyId();
+        final Long finalGameId = game.getId();
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                broadcastGameStarted(finalLobbyId, finalGameId);
+            }
+        });
+
+        GameStartDTO dto = new GameStartDTO();
+        dto.setLobbyId(lobby.getLobbyId());
+        dto.setGameId(game.getId());
+        return dto;
     }
     
     private void broadcastGameStarted(Long lobbyId, Long gameId) {

@@ -33,21 +33,39 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   deploy:
-    name: Deploying to Google Cloud
+    name: Deploying to Google Cloud Run
     runs-on: ubuntu-latest
     # needs: test
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Deploy to App Engine
-        id: deploy
-        uses: google-github-actions/deploy-appengine@v0.2.0
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
         with:
-          deliverables: app.yaml
-          version: v1
-          credentials: ${{ secrets.GCP_SERVICE_CREDENTIALS }}
+          credentials_json: ${{ secrets.GCP_SERVICE_CREDENTIALS }}
 
-      - name: Test
-        run: curl "${{ steps.deploy.outputs.url }}"
+      - name: Configure Docker to use GCP credentials
+        run: gcloud auth configure-docker gcr.io --quiet
+
+      - name: Build Docker image
+        run: |
+          docker build -t gcr.io/sopra-fs26-group-23-server/sopra-fs26-group-23-server:latest .
+
+      - name: Push Docker image to GCR
+        run: |
+          docker push gcr.io/sopra-fs26-group-23-server/sopra-fs26-group-23-server:latest
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: sopra-fs26-group-23-server
+          region: europe-west1
+          image: gcr.io/sopra-fs26-group-23-server/sopra-fs26-group-23-server:latest
+          flags: >
+            --allow-unauthenticated
+            --port=8080
+            --timeout=3600
+            --min-instances=1
+            --memory=512Mi

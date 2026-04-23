@@ -1,16 +1,26 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
+import java.util.List;
+
+import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.PlayerColor;
-
-import java.util.List;
 
 public class GameStateDTO {
     private Long gameId;
     private GameStatus status;
     private int currentPlayerIndex;
     private Long currentPlayerId;
+    private GamePhase currentPhase;
     private List<PlayerStateDTO> players;
-    private List<FieldStateDTO> fields; 
+    private List<FieldStateDTO> fields;
+    private boolean moveDoneThisTurn;
+    private int turnNumber;
+
+    public boolean isMoveDoneThisTurn() { return moveDoneThisTurn; }
+    public void setMoveDoneThisTurn(boolean moveDoneThisTurn) { this.moveDoneThisTurn = moveDoneThisTurn; }
+
+    public int getTurnNumber() { return turnNumber; }
+    public void setTurnNumber(int turnNumber) { this.turnNumber = turnNumber; }
 
     public static class PlayerStateDTO {
         private Long playerId;
@@ -19,6 +29,7 @@ public class GameStateDTO {
         private PlayerColor color;
         private boolean alive;
         private Long troopCount;
+        
 
         public Long getPlayerId() { return playerId; }
         public void setPlayerId(Long playerId) { this.playerId = playerId; }
@@ -32,6 +43,7 @@ public class GameStateDTO {
         public void setAlive(boolean alive) { this.alive = alive; }
         public Long getTroopCount() { return troopCount; }
         public void setTroopCount(Long troopCount) { this.troopCount = troopCount; }
+        
     }
 
     public static class FieldStateDTO {
@@ -55,6 +67,8 @@ public class GameStateDTO {
     public void setCurrentPlayerIndex(int currentPlayerIndex) { this.currentPlayerIndex = currentPlayerIndex; }
     public Long getCurrentPlayerId() { return currentPlayerId; }
     public void setCurrentPlayerId(Long currentPlayerId) { this.currentPlayerId = currentPlayerId; }
+    public GamePhase getCurrentPhase() { return currentPhase; }
+    public void setCurrentPhase(GamePhase currentPhase) { this.currentPhase = currentPhase; }
     public List<PlayerStateDTO> getPlayers() { return players; }
     public void setPlayers(List<PlayerStateDTO> players) { this.players = players; }
     public List<FieldStateDTO> getFields() { return fields; }

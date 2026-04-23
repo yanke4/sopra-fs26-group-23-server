@@ -1,20 +1,18 @@
 package ch.uzh.ifi.hase.soprafs26.entity;
+import java.io.Serializable;
+import java.util.List;
+
+import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
+import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import java.util.List;
-
-import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.EnumType;
-
-import java.io.Serializable;
 
 
 @Entity
@@ -22,7 +20,6 @@ import java.io.Serializable;
 public class Game implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
 
@@ -36,8 +33,17 @@ public class Game implements Serializable {
     @Column 
     private int currentPlayerIndex;
 
+    @Column
+    private boolean moveDoneThisTurn = false;
+
+    @Column
+    private int turnNumber = 1;
+
     @Enumerated(EnumType.STRING)
     private GameStatus status; //either waiting, running or finished
+
+    @Enumerated(EnumType.STRING)
+    private GamePhase currentPhase;
 
     public Player getCurrentPlayer(){
         if(playerOrder == null || playerOrder.isEmpty()) {
@@ -58,6 +64,10 @@ public class Game implements Serializable {
 
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public List<Player> getPlayerOrder() {
@@ -88,5 +98,28 @@ public class Game implements Serializable {
         this.status = status;
     }
 
+    public GamePhase getCurrentPhase() {
+        return currentPhase;
+    }
+
+    public void setCurrentPhase(GamePhase currentPhase) {
+        this.currentPhase = currentPhase;
+    }
+
+    public boolean isMoveDoneThisTurn() {
+        return moveDoneThisTurn;
+    }
+
+public void setMoveDoneThisTurn(boolean moveDoneThisTurn) {
+        this.moveDoneThisTurn = moveDoneThisTurn;
+    }
+
+    public int getTurnNumber() {
+        return turnNumber;
+    }
+
+    public void setTurnNumber(int turnNumber) {
+        this.turnNumber = turnNumber;
+    }
 
 }

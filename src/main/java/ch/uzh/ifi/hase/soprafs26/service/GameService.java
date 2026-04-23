@@ -4,8 +4,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.PlayerColor;
 import ch.uzh.ifi.hase.soprafs26.entity.Field;
@@ -35,10 +38,75 @@ public class GameService {
 
     private final GameRepository gameRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final RegionService regionService;
 
-    public GameService(GameRepository gameRepository, SimpMessagingTemplate messagingTemplate) {
+    public GameService(GameRepository gameRepository, SimpMessagingTemplate messagingTemplate,
+                       RegionService regionService) {
         this.gameRepository = gameRepository;
         this.messagingTemplate = messagingTemplate;
+        this.regionService = regionService;
+    }
+
+    private long calculateReinforcements(Long gameId, Player player) {
+        int fromRegions = regionService.calculateRegionBonus(gameId, player);
+        return 4L + fromRegions;
+    }
+
+    public GameStateDTO getGameState(Long gameId) {
+        Game game = gameRepository.findById(gameId)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Game " + gameId + " not found."
+            ));
+        return convertToGameStateDTO(game);
+    }
+
+    public void advancePhase(Long gameId, Long playerId) {
+        Game game = gameRepository.findById(gameId)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Game " + gameId + " not found."));
+
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null || !currentPlayer.getPlayerId().equals(playerId)) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN, "It's not player " + playerId + "'s turn.");
+        }
+
+        GamePhase phase = game.getCurrentPhase();
+        switch (phase) {
+            case DEPLOY:
+                if (currentPlayer.getTroopCount() > 0) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "You must deploy all remaining troops before advancing.");
+                }
+                game.setCurrentPhase(GamePhase.ATTACK);
+                break;
+            case ATTACK:
+                game.setCurrentPhase(GamePhase.FORTIFY);
+                break;
+            case FORTIFY:
+                // Move to next alive player and reset to DEPLOY
+                game.setMoveDoneThisTurn(false);
+                int nextIndex = game.getCurrentPlayerIndex();
+                List<Player> players = game.getPlayerOrder();
+                int startIndex = nextIndex;
+                do {
+                    nextIndex = (nextIndex + 1) % players.size();
+                } while (!players.get(nextIndex).isAlive() && nextIndex != startIndex);
+                game.setCurrentPlayerIndex(nextIndex);
+                // A new turn starts when the play order wraps back to (or past) the previous player's index
+                if (nextIndex <= startIndex) {
+                    game.setTurnNumber(game.getTurnNumber() + 1);
+                }
+                game.setCurrentPhase(GamePhase.DEPLOY);
+                Player nextPlayer = players.get(nextIndex);
+                nextPlayer.setTroopCount(calculateReinforcements(gameId, nextPlayer));
+                break;
+        }
+
+        gameRepository.save(game);
+        gameRepository.flush();
+        broadcastGameState(game);
     }
 
     //update game state broadcaster for turn actions
@@ -63,6 +131,9 @@ public class GameService {
         gameStateDTO.setStatus(game.getStatus());
         gameStateDTO.setCurrentPlayerIndex(game.getCurrentPlayerIndex());
         gameStateDTO.setCurrentPlayerId(game.getCurrentPlayer() != null ? game.getCurrentPlayer().getPlayerId() : null);
+        gameStateDTO.setCurrentPhase(game.getCurrentPhase());
+        gameStateDTO.setMoveDoneThisTurn(game.isMoveDoneThisTurn());
+        gameStateDTO.setTurnNumber(game.getTurnNumber());
 
         gameStateDTO.setPlayers(
             game.getPlayerOrder().stream().map(player -> {
@@ -91,10 +162,22 @@ public class GameService {
     }
     
 
+    private Long generateUniqueGameId() {
+        Random random = new Random();
+        Long id;
+        do {
+            id = 100000L + (long) (random.nextDouble() * 900000);
+        } while (gameRepository.existsById(id));
+        return id;
+    }
+
     public Game createGame(Lobby lobby) {
         Game game = new Game();
+        game.setId(generateUniqueGameId());
         game.setStatus(GameStatus.RUNNING);
         game.setCurrentPlayerIndex(0);
+        game.setCurrentPhase(GamePhase.DEPLOY);
+        game.setTurnNumber(1);
 
         List<Player> players = createPlayers(lobby, game);
         game.setPlayerOrder(players);
@@ -108,6 +191,9 @@ public class GameService {
 
         game = gameRepository.save(game);
         gameRepository.flush();
+
+        Player firstPlayer = game.getPlayerOrder().get(0);
+        firstPlayer.setTroopCount(calculateReinforcements(game.getId(), firstPlayer));
 
         broadcastGameState(game);
         return game;
@@ -196,26 +282,82 @@ public class GameService {
 
         Collections.shuffle(allFields);
 
-        // each player gets 2 random territories
-        int index = 0;
+        // each player gets 2 non-adjacent territories with 2 and 3 troops
+        // additionally, no player's spawn may be adjacent to any other player's spawn
+        List<Field> available = new ArrayList<>(allFields);
+        Set<String> claimedNames = new HashSet<>();
         for (Player player : players) {
-            Field field1 = allFields.get(index++);
-            Field field2 = allFields.get(index++);
+            Field field1 = findSpawnPair(available, claimedNames, true);
+            Field field2 = null;
+
+            if (field1 != null) {
+                field2 = findSpawnPartner(field1, available, claimedNames, true);
+            }
+
+            // fallback 1: relax cross-player non-adjacency, keep intra-player non-adjacency
+            if (field1 == null || field2 == null) {
+                field1 = findSpawnPair(available, claimedNames, false);
+                if (field1 != null) {
+                    field2 = findSpawnPartner(field1, available, claimedNames, false);
+                }
+            }
+
+            // fallback 2: take any two remaining fields
+            if (field1 == null || field2 == null) {
+                field1 = available.get(0);
+                field2 = available.get(1);
+            }
+
+            available.remove(field1);
+            available.remove(field2);
+            claimedNames.add(field1.getName());
+            claimedNames.add(field2.getName());
+
             field1.setOwner(player);
             field2.setOwner(player);
-
-            // 5 troops total, min 1 per territory, rest random
-            Random random = new Random();
-            int troops1 = 1 + random.nextInt(4); // 1 to 4
-            int troops2 = 5 - troops1;           // remaining, at least 1
-            field1.setTroops((long) troops1);
-            field2.setTroops((long) troops2);
+            field1.setTroops(2L);
+            field2.setTroops(3L);
         }
 
         // remaining fields are neutral with 1 troop each
-        for (int i = index; i < allFields.size(); i++) {
-            allFields.get(i).setOwner(null);
-            allFields.get(i).setTroops(1L);
+        for (Field field : available) {
+            field.setOwner(null);
+            field.setTroops(1L);
         }
+    }
+
+    private Field findSpawnPair(List<Field> available, Set<String> claimedNames,
+                                boolean avoidClaimedNeighbours) {
+        for (Field candidate : available) {
+            if (avoidClaimedNeighbours && isAdjacentToAny(candidate, claimedNames)) {
+                continue;
+            }
+            if (findSpawnPartner(candidate, available, claimedNames, avoidClaimedNeighbours) != null) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    private Field findSpawnPartner(Field first, List<Field> available, Set<String> claimedNames,
+                                   boolean avoidClaimedNeighbours) {
+        for (Field candidate : available) {
+            if (candidate == first) continue;
+            if (avoidClaimedNeighbours && isAdjacentToAny(candidate, claimedNames)) {
+                continue;
+            }
+            boolean adjacentToFirst = first.getNeighbours() != null
+                && first.getNeighbours().stream()
+                    .anyMatch(n -> n.getName().equals(candidate.getName()));
+            if (!adjacentToFirst) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    private boolean isAdjacentToAny(Field field, Set<String> names) {
+        if (names.isEmpty() || field.getNeighbours() == null) return false;
+        return field.getNeighbours().stream().anyMatch(n -> names.contains(n.getName()));
     }
 }
