@@ -216,7 +216,7 @@ public class UserServiceTest {
 
         assertThrows(ResponseStatusException.class, () -> userService.authenticateUser("invalidToken"));    
 
-        Mockito.verify(userRepository, Mockito.never()).findByToken("invalidToken");
+        Mockito.verify(userRepository).findByToken("invalidToken");
     }
 
     @Test
