@@ -18,8 +18,17 @@ public class TurnMoveDTO {
     public Long getPlayerId() {
         return playerId;
     }
+
+    public void setPlayerId(Long playerId) {
+        this.playerId = playerId;
+    }
+
     public List<Move> getMoves() {
         return moves;
+    }
+
+    public void setMoves(List<Move> moves) {
+        this.moves = moves;
     }
 
     public static class Move{
@@ -30,11 +39,25 @@ public class TurnMoveDTO {
         public String getFromField() {
             return fromField;
         }
+
+        public void setFromField(String fromField) {
+            this.fromField = fromField;
+        }
+
         public Long getTroops() {
             return troops;
         }
+
+        public void setTroops(Long troops) {
+            this.troops = troops;
+        }
+
         public String getToField() {
             return toField;
+        }
+
+        public void setToField(String toField) {
+            this.toField = toField;
         }
     }
 }
