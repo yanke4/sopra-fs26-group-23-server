@@ -20,9 +20,19 @@ public class TurnAttackDTO {
     public Long getPlayerId() {
         return playerId;
     }
+
+    public void setPlayerId(Long playerId) {
+        this.playerId = playerId;
+    }
+
     public List<Attack> getAttacks() {
         return attacks;
     }
+
+    public void setAttacks(List<Attack> attacks) {
+        this.attacks = attacks;
+    }
+
     public static class Attack{
         private String attackingField;
         private Long troops;
@@ -31,11 +41,25 @@ public class TurnAttackDTO {
         public String getAttackingField() {
             return attackingField;
         }
+
+        public void setAttackingField(String attackingField) {
+            this.attackingField = attackingField;
+        }
+
         public Long getTroops() {
             return troops;
         }
+
+        public void setTroops(Long troops) {
+            this.troops = troops;
+        }
+
         public String getDefendingField() {
             return defendingField;
+        }
+
+        public void setDefendingField(String defendingField) {
+            this.defendingField = defendingField;
         }
     }
 }

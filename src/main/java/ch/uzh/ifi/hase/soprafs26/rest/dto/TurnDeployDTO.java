@@ -18,8 +18,17 @@ public class TurnDeployDTO {
     public long getPlayerId() {
         return playerId;
     }
+
+    public void setPlayerId(long playerId) {
+        this.playerId = playerId;
+    }
+
     public List<Deployment> getDeployments() {
         return deployments;
+    }
+
+    public void setDeployments(List<Deployment> deployments) {
+        this.deployments = deployments;
     }
     
     public static class Deployment{
@@ -30,8 +39,16 @@ public class TurnDeployDTO {
             return fieldName;
         }
 
+        public void setFieldName(String fieldName) {
+            this.fieldName = fieldName;
+        }
+
         public Long getTroops() {
             return troops;
+        }
+
+        public void setTroops(Long troops) {
+            this.troops = troops;
         }
 
     }
