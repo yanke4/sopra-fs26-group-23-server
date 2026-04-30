@@ -30,12 +30,14 @@ public class TurnService {
     private final GameService gameService;
     private final GameRepository gameRepository;
     private final RegionService regionService;
+    private final UserService userService;
 
-    public TurnService(FieldService fieldService, GameService gameService, GameRepository gameRepository, RegionService regionService) {
+    public TurnService(FieldService fieldService, GameService gameService, GameRepository gameRepository, RegionService regionService, UserService userService) {
         this.fieldService = fieldService;
         this.gameService = gameService;
         this.gameRepository = gameRepository;
         this.regionService = regionService;
+        this.userService = userService;
     }
 
     public void deployUnits(TurnDeployDTO turnDeployDTO, Long gameId) {
@@ -230,6 +232,7 @@ public class TurnService {
         game.setStatus(GameStatus.FINISHED);
         gameRepository.save(game);
         gameRepository.flush();
+        userService.updatePlayerStats(game);
     }
 }
 

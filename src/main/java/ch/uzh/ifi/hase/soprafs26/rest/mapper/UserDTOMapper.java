@@ -16,6 +16,8 @@ public interface UserDTOMapper {
     @Mapping(source = "password", target = "passwordHash")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "token", ignore = true)
+    @Mapping(target = "stats", ignore = true)
     User convertUserPostDTOtoEntity(UserPostDTO userPostDTO);
 
     @Mapping(source = "id", target = "id")

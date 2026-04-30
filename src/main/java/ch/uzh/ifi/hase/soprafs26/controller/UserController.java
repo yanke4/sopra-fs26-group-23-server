@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserStatsDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.mapper.UserDTOMapper;
@@ -12,6 +13,7 @@ import ch.uzh.ifi.hase.soprafs26.service.UserService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * User Controller
@@ -98,4 +100,10 @@ public class UserController {
 		userService.updateUser(id, userPostDTO);
 	}
 
+	@GetMapping("/leaderboard")
+	@ResponseStatus(HttpStatus.OK)
+	@ResponseBody
+	public List<UserStatsDTO> getLeaderboard() {
+		return userService.getLeaderboard();
+	}
 }

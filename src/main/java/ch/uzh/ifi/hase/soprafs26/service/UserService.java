@@ -9,16 +9,24 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.entity.UserStats;
+import ch.uzh.ifi.hase.soprafs26.entity.Game;
+import ch.uzh.ifi.hase.soprafs26.entity.Player;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.UserStatsRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserStatsDTO;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * User Service
@@ -30,9 +38,11 @@ public class UserService {
     private final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
+    private final UserStatsRepository userStatsRepository;
 
-    public UserService(@Qualifier("userRepository") UserRepository userRepository) {
+    public UserService(@Qualifier("userRepository") UserRepository userRepository, UserStatsRepository userStatsRepository) {
         this.userRepository = userRepository;
+        this.userStatsRepository = userStatsRepository;
     }
 
     public List<User> getUsers() {
@@ -55,6 +65,13 @@ public class UserService {
 
         newUser = userRepository.save(newUser);
         userRepository.flush();
+
+        // Create and save initial statistics for the new user
+        UserStats initialStats = new UserStats();
+        initialStats.setUser(newUser);
+        initialStats.setGamesPlayed(0L);
+        initialStats.setWins(0L);
+        userStatsRepository.save(initialStats);
 
         log.debug("Created Information for User: {}", newUser.getId());
         return newUser;
@@ -146,4 +163,51 @@ public class UserService {
             throw new IllegalStateException("SHA-256 hashing algorithm unavailable", e);
         }
     }
+
+    public void updatePlayerStats(Game game) {
+        // determine winner
+        Player winnerPlayer = game.getPlayerOrder().stream()
+            .filter(Player::isAlive)
+            .findFirst()
+            .orElse(null);
+
+        // update stats for all players in the game
+        List<UserStats> toSave = new ArrayList<>();
+        for (Player p : game.getPlayerOrder()) {
+            Long userId = p.getUser().getId();
+            UserStats stats = userStatsRepository.findByUserId(userId)
+                .orElseThrow(() -> new IllegalStateException("UserStats for user " + userId + " not found. Stats should be created with the user."));
+            stats.setGamesPlayed(stats.getGamesPlayed() + 1);
+            if (winnerPlayer != null && p.getPlayerId().equals(winnerPlayer.getPlayerId())) {
+                stats.setWins(stats.getWins() + 1);
+            }
+            toSave.add(stats);
+        }
+        userStatsRepository.saveAll(toSave);
+    }
+    public List<UserStatsDTO> getLeaderboard() {
+    List<UserStats> allStats = userStatsRepository.findAll();
+
+    List<UserStatsDTO> dtos = allStats.stream().map(stats -> {
+        UserStatsDTO dto = new UserStatsDTO();
+        dto.setUserId(stats.getUser().getId());
+        dto.setUsername(stats.getUser().getUsername());
+        dto.setGamesPlayed(stats.getGamesPlayed());
+        dto.setTotalPoints(stats.getWins());
+
+        if (stats.getGamesPlayed() != null && stats.getGamesPlayed() > 0) {
+            dto.setWinPercentage((double) stats.getWins() / stats.getGamesPlayed());
+        } else {
+            dto.setWinPercentage(0.0);
+        }
+        return dto;
+    }).collect(Collectors.toList());
+
+    // Sorts the leaderboard: 1. total points (desc), 2. games played (desc), 3. username (asc)
+    dtos.sort(Comparator.comparing(UserStatsDTO::getTotalPoints).reversed()
+            .thenComparing(UserStatsDTO::getGamesPlayed).reversed()
+            .thenComparing(UserStatsDTO::getUsername, String.CASE_INSENSITIVE_ORDER));
+
+    return dtos;
+}
 }

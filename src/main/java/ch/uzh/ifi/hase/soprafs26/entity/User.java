@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import java.io.Serializable;
@@ -37,6 +38,9 @@ public class User implements Serializable {
 
 	@Column(nullable = true, unique = true)
 	private String token;
+
+	@OneToOne(mappedBy = "user")
+	private UserStats stats;
 
 	@PrePersist
 	protected void onCreate() {
@@ -83,6 +87,14 @@ public class User implements Serializable {
 
 	public void setToken(String token) {
 		this.token = token;
+	}
+
+	public UserStats getStats() {
+		return stats;
+	}
+
+	public void setStats(UserStats stats) {
+		this.stats = stats;
 	}
 }
 
