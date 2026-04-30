@@ -4,7 +4,7 @@ public class UserStatsDTO {
 
     private Long userId;
     private String username;
-    private Long totalPoints;
+    private Long wins;
     private Long gamesPlayed;
     private Double winPercentage;
 
@@ -24,12 +24,12 @@ public class UserStatsDTO {
         this.username = username;
     }
 
-    public Long getTotalPoints() {
-        return totalPoints;
+    public Long getWins() {
+        return wins;
     }
 
-    public void setTotalPoints(Long totalPoints) {
-        this.totalPoints = totalPoints;
+    public void setWins(Long wins) {
+        this.wins = wins;
     }
 
     public Long getGamesPlayed() {

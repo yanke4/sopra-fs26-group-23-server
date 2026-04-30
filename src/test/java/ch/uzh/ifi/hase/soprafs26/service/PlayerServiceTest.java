@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
@@ -39,6 +40,9 @@ public class PlayerServiceTest {
     @Mock
     private GameService gameService;
 
+    @Mock
+    private UserService userService;
+
     private PlayerService playerService;
 
     private Game game;
@@ -50,7 +54,7 @@ public class PlayerServiceTest {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.openMocks(this);
-        playerService = new PlayerService(gameRepository, gameService);
+        playerService = new PlayerService(gameRepository, gameService, userService);
 
         playerA = buildPlayer(PLAYER_A_ID, true);
         playerB = buildPlayer(PLAYER_B_ID, true);
@@ -138,6 +142,14 @@ public class PlayerServiceTest {
         playerService.surrender(GAME_ID, PLAYER_B_ID);
 
         assertEquals(GameStatus.FINISHED, game.getStatus());
+        verify(userService).updatePlayerStats(game);
+    }
+
+    @Test
+    public void surrender_gameNotFinished_doesNotUpdateStats() {
+        playerService.surrender(GAME_ID, PLAYER_A_ID);
+
+        verify(userService, never()).updatePlayerStats(game);
     }
 
 

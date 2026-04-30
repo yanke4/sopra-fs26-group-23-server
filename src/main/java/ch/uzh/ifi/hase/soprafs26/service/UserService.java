@@ -193,7 +193,7 @@ public class UserService {
         dto.setUserId(stats.getUser().getId());
         dto.setUsername(stats.getUser().getUsername());
         dto.setGamesPlayed(stats.getGamesPlayed());
-        dto.setTotalPoints(stats.getWins());
+        dto.setWins(stats.getWins());
 
         if (stats.getGamesPlayed() != null && stats.getGamesPlayed() > 0) {
             dto.setWinPercentage((double) stats.getWins() / stats.getGamesPlayed());
@@ -203,10 +203,14 @@ public class UserService {
         return dto;
     }).collect(Collectors.toList());
 
-    // Sorts the leaderboard: 1. total points (desc), 2. games played (desc), 3. username (asc)
-    dtos.sort(Comparator.comparing(UserStatsDTO::getTotalPoints).reversed()
-            .thenComparing(UserStatsDTO::getGamesPlayed).reversed()
-            .thenComparing(UserStatsDTO::getUsername, String.CASE_INSENSITIVE_ORDER));
+    // Sorts the leaderboard: 1. wins (desc), 2. games played (desc), 3. username (asc)
+    dtos.sort((a, b) -> {
+        int cmp = b.getWins().compareTo(a.getWins());
+        if (cmp != 0) return cmp;
+        cmp = b.getGamesPlayed().compareTo(a.getGamesPlayed());
+        if (cmp != 0) return cmp;
+        return a.getUsername().compareToIgnoreCase(b.getUsername());
+    });
 
     return dtos;
 }

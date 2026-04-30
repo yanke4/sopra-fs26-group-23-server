@@ -21,10 +21,12 @@ public class PlayerService {
 
     private final GameRepository gameRepository;
     private final GameService gameService;
+    private final UserService userService;
 
-    public PlayerService(GameRepository gameRepository, GameService gameService) {
+    public PlayerService(GameRepository gameRepository, GameService gameService, UserService userService) {
         this.gameRepository = gameRepository;
         this.gameService = gameService;
+        this.userService = userService;
     }
 
     public void surrender(Long gameId, Long playerId) {
@@ -78,10 +80,11 @@ public class PlayerService {
         .filter(Player::isAlive)
         .count();
 
-        if (aliveCount <= 1) {
+        if (aliveCount <= 1 && game.getStatus() != GameStatus.FINISHED) {
             game.setStatus(GameStatus.FINISHED);
             gameRepository.save(game);
             gameRepository.flush();
+            userService.updatePlayerStats(game);
         }
 
         gameService.broadcastGameState(game);
