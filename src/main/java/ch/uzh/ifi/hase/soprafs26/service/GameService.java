@@ -119,6 +119,17 @@ public class GameService {
         broadcastGameState(game);
     }
 
+    public void broadcastGameUpdate(Long gameId, GameStateDTO.AttackEventDTO lastAttack){
+        Game game = gameRepository.findById(gameId)
+            .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Game " + gameId + " not found."
+            ));
+        GameStateDTO gameStateDTO = convertToGameStateDTO(game);
+        gameStateDTO.setLastAttack(lastAttack);
+        messagingTemplate.convertAndSend("/topic/game/" + game.getId(), gameStateDTO);
+    }
+
     public void broadcastGameState(Game game) {
         GameStateDTO gameStateDTO = convertToGameStateDTO(game);
         messagingTemplate.convertAndSend("/topic/game/" + game.getId(), gameStateDTO);

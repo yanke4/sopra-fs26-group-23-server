@@ -15,6 +15,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.Field;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Player;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameStateDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnAttackDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnAttackDTO.Attack;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnDeployDTO;
@@ -91,6 +92,7 @@ public class TurnService {
         }
 
         Long requestingPlayerId = turnAttackDTO.getPlayerId();
+        GameStateDTO.AttackEventDTO lastAttackEvent = null;
 
         for (Attack attack: turnAttackDTO.getAttacks()) {
             Field attackingField = fieldService.getFieldByName(attack.getAttackingField(), gameId);
@@ -98,68 +100,73 @@ public class TurnService {
 
             if (attackingField.getOwner() == null || !attackingField.getOwner().getPlayerId().equals(requestingPlayerId)) {
                 throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,"Player " + requestingPlayerId + " does not own the attacking territory: " + attack.getAttackingField());
-        }
+                    HttpStatus.FORBIDDEN, "Player " + requestingPlayerId + " does not own the attacking territory: " + attack.getAttackingField());
+            }
 
             if (defendingField.getOwner() != null && defendingField.getOwner().getPlayerId().equals(requestingPlayerId)) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Cannot attack your own territory: " + attack.getDefendingField());
-        }
-
-        boolean isAdjacent = attackingField.getNeighbours() != null && attackingField.getNeighbours().stream()
-                .anyMatch(n -> n.getName().equals(defendingField.getName()));
-
-        if (!isAdjacent) {
-            throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST, attack.getDefendingField() + " is not adjacent to " + attack.getAttackingField());
-        }
-
-        if (attackingField.getTroops() == null || attackingField.getTroops() < 2) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Need at least 2 troops on " + attack.getAttackingField() + " to attack.");
-        }
-
-        Long originalTroops = attackingField.getTroops();
-        Long troopsUsed = attack.getTroops();
-
-        if (troopsUsed >= originalTroops) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                "You must leave at least 1 troop behind.");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot attack your own territory: " + attack.getDefendingField());
             }
+
+            boolean isAdjacent = attackingField.getNeighbours() != null && attackingField.getNeighbours().stream()
+                    .anyMatch(n -> n.getName().equals(defendingField.getName()));
+
+            if (!isAdjacent) {
+                throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, attack.getDefendingField() + " is not adjacent to " + attack.getAttackingField());
+            }
+
+            if (attackingField.getTroops() == null || attackingField.getTroops() < 2) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Need at least 2 troops on " + attack.getAttackingField() + " to attack.");
+            }
+
+            Long originalTroops = attackingField.getTroops();
+            Long troopsUsed = attack.getTroops();
+
+            if (troopsUsed >= originalTroops) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "You must leave at least 1 troop behind.");
+            }
+
             Long attackingTroops = troopsUsed;
-        Long defendingTroops = defendingField.getTroops(); 
-        
-        
-        //attack logic: 
-        while (defendingTroops > 0 && attackingTroops > 1) {
-            List<Integer> attackerRolls = rollDices(attackingTroops, 3);
-            List<Integer> defenderRolls = rollDices(defendingTroops, 2);
+            Long defendingTroops = defendingField.getTroops();
+            Long originalDefendingTroops = defendingTroops;
 
-            int comparisons = Math.min(attackerRolls.size(), defenderRolls.size());
-            for (int i = 0; i < comparisons; i++) {
-                if (attackerRolls.get(i) > defenderRolls.get(i)) {
-                    defendingTroops -= 1L;
+            while (defendingTroops > 0 && attackingTroops > 1) {
+                List<Integer> attackerRolls = rollDices(attackingTroops, 3);
+                List<Integer> defenderRolls = rollDices(defendingTroops, 2);
 
-                } else {
-                    attackingTroops -= 1L;
+                int comparisons = Math.min(attackerRolls.size(), defenderRolls.size());
+                for (int i = 0; i < comparisons; i++) {
+                    if (attackerRolls.get(i) > defenderRolls.get(i)) {
+                        defendingTroops -= 1L;
+                    } else {
+                        attackingTroops -= 1L;
+                    }
                 }
             }
-        }
 
-        Long remaininOnAttackField = originalTroops - troopsUsed; 
-        attackingField.setTroops(remaininOnAttackField);
+            Long remainingOnAttackField = originalTroops - troopsUsed;
+            attackingField.setTroops(remainingOnAttackField);
 
+            boolean conquered = defendingTroops == 0;
+            if (conquered) {
+                defendingField.setOwner(attackingField.getOwner());
+                defendingField.setTroops(attackingTroops);
+            } else {
+                defendingField.setTroops(defendingTroops);
+            }
 
-        if (defendingTroops == 0) {
-            defendingField.setOwner(attackingField.getOwner());
-            defendingField.setTroops(attackingTroops);
-    
-        } else {
-            defendingField.setTroops(defendingTroops);
-        }
+            lastAttackEvent = new GameStateDTO.AttackEventDTO();
+            lastAttackEvent.setAttacker(attackingField.getName());
+            lastAttackEvent.setDefender(defendingField.getName());
+            lastAttackEvent.setAttackerLosses(troopsUsed - (conquered ? attackingTroops : 0));
+            lastAttackEvent.setDefenderLosses(originalDefendingTroops - defendingTroops);
+            lastAttackEvent.setConquered(conquered);
         }
 
         gameRepository.flush();
         checkAndHandleWinCondition(game);
-        gameService.broadcastGameUpdate(gameId);
+        gameService.broadcastGameUpdate(gameId, lastAttackEvent);
     }
 
 

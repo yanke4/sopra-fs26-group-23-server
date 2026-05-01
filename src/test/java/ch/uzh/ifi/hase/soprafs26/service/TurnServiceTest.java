@@ -3,8 +3,10 @@ package ch.uzh.ifi.hase.soprafs26.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,6 +17,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
@@ -29,6 +32,7 @@ import ch.uzh.ifi.hase.soprafs26.entity.Player;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.entity.Field;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.GameStateDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnAttackDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnDeployDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnMoveDTO;
@@ -51,6 +55,9 @@ public class TurnServiceTest {
     @Mock
     protected RegionService regionService;
 
+    @Mock
+    protected UserService userService;
+
     protected TurnService turnService;
 
     protected Game game;
@@ -65,7 +72,7 @@ public class TurnServiceTest {
     public void setup() {
         MockitoAnnotations.openMocks(this);
 
-        turnService = new TurnService(fieldService, gameService, gameRepository, regionService);
+        turnService = new TurnService(fieldService, gameService, gameRepository, regionService, userService);
 
         activePlayer = createPlayer(ACTIVE_PLAYER_ID, 10L, true);
         otherPlayer = createPlayer(OTHER_PLAYER_ID, 10L, true);
@@ -196,6 +203,7 @@ public class TurnServiceTest {
         verify(fieldService).addUnits("A", 5L, GAME_ID); // Verify field units were added
         verify(gameService).broadcastGameUpdate(GAME_ID); // Verify broadcast was called
     }
+
     @Test
     public void deployUnits_wrongPlayer_throwsForbidden() {
         game.setCurrentPhase(GamePhase.DEPLOY); // set phase to deploy
@@ -310,7 +318,39 @@ public class TurnServiceTest {
         assertTrue(fieldB.getTroops() >= 1 && fieldB.getTroops() <= 3);
 
         verify(gameRepository).flush(); // Verify game state was flushed
-        verify(gameService).broadcastGameUpdate(GAME_ID); // Verify broadcast was called
+        verify(gameService).broadcastGameUpdate(eq(GAME_ID), any(GameStateDTO.AttackEventDTO.class)); // Verify broadcast was called
+    }
+
+    @Test
+    public void attack_neutralRepelsWithNoDefenderLoss_broadcastsRepelledEvent() {
+        game.setCurrentPhase(GamePhase.ATTACK);
+        fieldA.setTroops(5L);
+        fieldB.setOwner(null);
+        fieldB.setTroops(1L);
+
+        when(fieldService.getFieldByName("A", GAME_ID)).thenReturn(fieldA);
+        when(fieldService.getFieldByName("B", GAME_ID)).thenReturn(fieldB);
+        when(fieldService.countTerritoriesOwnedByPlayer(GAME_ID, activePlayer)).thenReturn(1);
+        when(fieldService.countTerritoriesOwnedByPlayer(GAME_ID, otherPlayer)).thenReturn(1);
+
+        TurnAttackDTO dto = buildAttackDto(
+            ACTIVE_PLAYER_ID,
+            List.of(
+                buildAttack("A", "B", 1L)
+            ));
+
+        turnService.attack(dto, GAME_ID);
+
+        ArgumentCaptor<GameStateDTO.AttackEventDTO> attackEventCaptor =
+            ArgumentCaptor.forClass(GameStateDTO.AttackEventDTO.class);
+        verify(gameService).broadcastGameUpdate(eq(GAME_ID), attackEventCaptor.capture());
+        GameStateDTO.AttackEventDTO attackEvent = attackEventCaptor.getValue();
+
+        assertEquals("A", attackEvent.getAttacker());
+        assertEquals("B", attackEvent.getDefender());
+        assertEquals(1L, attackEvent.getAttackerLosses());
+        assertEquals(0L, attackEvent.getDefenderLosses());
+        assertEquals(false, attackEvent.isConquered());
     }
     @Test
     public void attack_wrongPlayer_throwsForbidden() {

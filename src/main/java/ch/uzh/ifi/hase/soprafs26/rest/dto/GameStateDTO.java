@@ -13,6 +13,7 @@ public class GameStateDTO {
     private GamePhase currentPhase;
     private List<PlayerStateDTO> players;
     private List<FieldStateDTO> fields;
+    private AttackEventDTO lastAttack;
     private boolean moveDoneThisTurn;
     private int turnNumber;
 
@@ -59,6 +60,25 @@ public class GameStateDTO {
         public void setTroops(Long troops) { this.troops = troops; }
     }
 
+    public static class AttackEventDTO {
+        private String attacker;
+        private String defender;
+        private Long attackerLosses;
+        private Long defenderLosses;
+        private boolean conquered;
+
+        public String getAttacker() { return attacker; }
+        public void setAttacker(String attacker) { this.attacker = attacker; }
+        public String getDefender() { return defender; }
+        public void setDefender(String defender) { this.defender = defender; }
+        public Long getAttackerLosses() { return attackerLosses; }
+        public void setAttackerLosses(Long attackerLosses) { this.attackerLosses = attackerLosses; }
+        public Long getDefenderLosses() { return defenderLosses; }
+        public void setDefenderLosses(Long defenderLosses) { this.defenderLosses = defenderLosses; }
+        public boolean isConquered() { return conquered; }
+        public void setConquered(boolean conquered) { this.conquered = conquered; }
+    }
+
     public Long getGameId() { return gameId; }
     public void setGameId(Long gameId) { this.gameId = gameId; }
     public GameStatus getStatus() { return status; }
@@ -73,4 +93,6 @@ public class GameStateDTO {
     public void setPlayers(List<PlayerStateDTO> players) { this.players = players; }
     public List<FieldStateDTO> getFields() { return fields; }
     public void setFields(List<FieldStateDTO> fields) { this.fields = fields; }
+    public AttackEventDTO getLastAttack() { return lastAttack; }
+    public void setLastAttack(AttackEventDTO lastAttack) { this.lastAttack = lastAttack; }
 }
