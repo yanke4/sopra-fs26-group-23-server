@@ -2,7 +2,7 @@
   "regions": [
     {
       "name": "British Isles",
-      "bonus": 5,
+      "bonus": 4,
       "fields": ["Iceland", "Ireland", "Great Britain"]
     },
     {
@@ -22,7 +22,7 @@
     },
     {
       "name": "Balkans",
-      "bonus": 5,
+      "bonus": 4,
       "fields": ["Balkan", "Greece", "Bulgaria", "Turkey"]
     },
     {
@@ -42,7 +42,7 @@
     },
     {
       "name": "Low Countries",
-      "bonus": 4,
+      "bonus": 5,
       "fields": ["Belgium", "Netherlands", "Germany", "Denmark"]
     }
   ],
