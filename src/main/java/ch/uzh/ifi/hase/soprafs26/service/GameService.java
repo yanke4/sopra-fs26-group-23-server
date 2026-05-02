@@ -371,4 +371,7 @@ public class GameService {
         if (names.isEmpty() || field.getNeighbours() == null) return false;
         return field.getNeighbours().stream().anyMatch(n -> names.contains(n.getName()));
     }
+    public void assignReinforcementsToPlayer(Long gameId, Player player) {
+        player.setTroopCount(calculateReinforcements(gameId, player));
+}
 }
