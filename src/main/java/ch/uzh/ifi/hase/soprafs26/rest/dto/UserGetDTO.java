@@ -8,6 +8,9 @@ public class UserGetDTO {
     private String username;
     private Instant createdAt;
     private String token;
+    private Long wins;
+    private Long gamesPlayed;
+    private Double winRate;
 
     public Long getId() {
         return id;
@@ -36,9 +39,32 @@ public class UserGetDTO {
     public String getToken(){
         return token;
     }
-    
+
     public void setToken(String token){
-        this.token = token; 
+        this.token = token;
     }
-    
+
+    public Long getWins() {
+        return wins;
+    }
+
+    public void setWins(Long wins) {
+        this.wins = wins;
+    }
+
+    public Long getGamesPlayed() {
+        return gamesPlayed;
+    }
+
+    public void setGamesPlayed(Long gamesPlayed) {
+        this.gamesPlayed = gamesPlayed;
+    }
+
+    public Double getWinRate() {
+        return winRate;
+    }
+
+    public void setWinRate(Double winRate) {
+        this.winRate = winRate;
+    }
 }

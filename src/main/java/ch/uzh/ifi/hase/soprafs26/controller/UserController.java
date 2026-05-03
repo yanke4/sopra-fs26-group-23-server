@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.entity.UserStats;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserStatsDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserGetDTO;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
@@ -75,6 +76,14 @@ public class UserController {
 		User userWithId = userService.getUserById(id);
 		UserGetDTO userGetDTO = UserDTOMapper.INSTANCE.convertEntityToUserGetDTO(userWithId);
 		userGetDTO.setToken(null);
+
+		UserStats stats = userService.getUserStats(id);
+		long wins = stats != null && stats.getWins() != null ? stats.getWins() : 0L;
+		long gamesPlayed = stats != null && stats.getGamesPlayed() != null ? stats.getGamesPlayed() : 0L;
+		userGetDTO.setWins(wins);
+		userGetDTO.setGamesPlayed(gamesPlayed);
+		userGetDTO.setWinRate(gamesPlayed > 0 ? (double) wins / gamesPlayed : 0.0);
+
 		return userGetDTO;
 	}
 

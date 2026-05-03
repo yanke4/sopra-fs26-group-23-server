@@ -82,6 +82,10 @@ public class UserService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
+    public UserStats getUserStats(Long userId) {
+        return userStatsRepository.findByUserId(userId).orElse(null);
+    }
+
     public User logInUser(UserPostDTO userPostDTO) {
         User user = userRepository.findByUsername(userPostDTO.getUsername());
         if (user == null) {
