@@ -207,11 +207,11 @@ public class UserService {
         return dto;
     }).collect(Collectors.toList());
 
-    // Sorts the leaderboard: 1. wins (desc), 2. games played (desc), 3. username (asc)
+    // Sorts the leaderboard: 1. wins (desc), 2. games played (asc), 3. username (asc)
     dtos.sort((a, b) -> {
         int cmp = b.getWins().compareTo(a.getWins());
         if (cmp != 0) return cmp;
-        cmp = b.getGamesPlayed().compareTo(a.getGamesPlayed());
+        cmp = a.getGamesPlayed().compareTo(b.getGamesPlayed());
         if (cmp != 0) return cmp;
         return a.getUsername().compareToIgnoreCase(b.getUsername());
     });
