@@ -89,12 +89,12 @@ public class UserService {
     public User logInUser(UserPostDTO userPostDTO) {
         User user = userRepository.findByUsername(userPostDTO.getUsername());
         if (user == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username!");
         }
 
         String providedHash = hashPassword(userPostDTO.getPassword());
         if (!providedHash.equals(user.getPasswordHash())) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid password!");
         }
 
         String token = UUID.randomUUID().toString();
