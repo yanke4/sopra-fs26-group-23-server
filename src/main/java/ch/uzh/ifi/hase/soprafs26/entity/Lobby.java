@@ -30,6 +30,16 @@ public class Lobby implements Serializable {
     @ManyToMany
     private List<User> jointUsers = new ArrayList<>();
 
+    @Column
+    private Integer turnTimerSeconds; // null = no limit
+
+    public Integer getTurnTimerSeconds() {
+        return turnTimerSeconds;
+    }
+    public void setTurnTimerSeconds(Integer turnTimerSeconds) {
+        this.turnTimerSeconds = turnTimerSeconds;
+    }
+
     public Long getLobbyId() {
         return lobbyId;
     }

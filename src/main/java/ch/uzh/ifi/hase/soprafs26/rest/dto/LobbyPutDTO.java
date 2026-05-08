@@ -6,6 +6,11 @@ public class LobbyPutDTO {
 
     private Long userId; //used if a user joins or leaves the lobby
 
+    private Integer turnTimerSeconds; //used by host to update the lobby's turn timer setting
+
+    public Integer getTurnTimerSeconds() { return turnTimerSeconds; }
+    public void setTurnTimerSeconds(Integer turnTimerSeconds) { this.turnTimerSeconds = turnTimerSeconds; }
+
     public LobbyStatus getStatus() {
         return status;
     }

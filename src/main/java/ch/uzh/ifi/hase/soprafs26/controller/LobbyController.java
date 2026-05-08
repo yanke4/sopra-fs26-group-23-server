@@ -73,4 +73,15 @@ public class LobbyController {
         @RequestBody LobbyPutDTO lobbyPutDTO) {
     return lobbyService.startGame(lobbyId, lobbyPutDTO.getUserId());
     }
+
+    @PutMapping("/lobbies/{lobbyId}/settings")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public LobbyGetDTO updateSettings(
+        @PathVariable Long lobbyId,
+        @RequestBody LobbyPutDTO lobbyPutDTO) {
+        Lobby lobby = lobbyService.updateSettings(
+            lobbyId, lobbyPutDTO.getUserId(), lobbyPutDTO.getTurnTimerSeconds());
+        return LobbyDTOMapper.INSTANCE.convertEntityToLobbyGetDTO(lobby);
+    }
 }

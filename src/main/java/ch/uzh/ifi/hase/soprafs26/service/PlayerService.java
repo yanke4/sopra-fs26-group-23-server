@@ -70,6 +70,7 @@ public class PlayerService {
             game.setCurrentPlayerIndex(nextIndex);
             game.setCurrentPhase(GamePhase.DEPLOY);
             game.setMoveDoneThisTurn(false);
+            game.setTurnStartedAtMillis(System.currentTimeMillis());
 
             Player nextPlayer = players.get(nextIndex);
             gameService.assignReinforcementsToPlayer(gameId, nextPlayer);

@@ -39,6 +39,12 @@ public class Game implements Serializable {
     @Column
     private int turnNumber = 1;
 
+    @Column
+    private Integer turnTimerSeconds; // null = no timer
+
+    @Column
+    private Long turnStartedAtMillis; // epoch millis when the current player's turn began
+
     @Enumerated(EnumType.STRING)
     private GameStatus status; //either waiting, running or finished
 
@@ -120,6 +126,22 @@ public void setMoveDoneThisTurn(boolean moveDoneThisTurn) {
 
     public void setTurnNumber(int turnNumber) {
         this.turnNumber = turnNumber;
+    }
+
+    public Integer getTurnTimerSeconds() {
+        return turnTimerSeconds;
+    }
+
+    public void setTurnTimerSeconds(Integer turnTimerSeconds) {
+        this.turnTimerSeconds = turnTimerSeconds;
+    }
+
+    public Long getTurnStartedAtMillis() {
+        return turnStartedAtMillis;
+    }
+
+    public void setTurnStartedAtMillis(Long turnStartedAtMillis) {
+        this.turnStartedAtMillis = turnStartedAtMillis;
     }
 
 }

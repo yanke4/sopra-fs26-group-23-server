@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -101,12 +102,78 @@ public class GameService {
                 game.setCurrentPhase(GamePhase.DEPLOY);
                 Player nextPlayer = players.get(nextIndex);
                 nextPlayer.setTroopCount(calculateReinforcements(gameId, nextPlayer));
+                game.setTurnStartedAtMillis(System.currentTimeMillis());
                 break;
         }
 
         gameRepository.save(game);
         gameRepository.flush();
         broadcastGameState(game);
+    }
+
+    /**
+     * Force-end the current player's turn — called when their turn timer expires.
+     * Forfeits unspent reinforcements and advances to the next alive player at DEPLOY.
+     */
+    public void forceEndTurn(Long gameId) {
+        Game game = gameRepository.findById(gameId).orElse(null);
+        if (game == null || game.getStatus() != GameStatus.RUNNING) return;
+
+        Player currentPlayer = game.getCurrentPlayer();
+        if (currentPlayer == null) return;
+
+        Long timedOutPlayerId = currentPlayer.getPlayerId();
+
+        currentPlayer.setTroopCount(0L);
+
+        List<Player> players = game.getPlayerOrder();
+        int startIndex = game.getCurrentPlayerIndex();
+        int nextIndex = startIndex;
+        do {
+            nextIndex = (nextIndex + 1) % players.size();
+        } while (!players.get(nextIndex).isAlive() && nextIndex != startIndex);
+
+        game.setCurrentPlayerIndex(nextIndex);
+        if (nextIndex <= startIndex) {
+            game.setTurnNumber(game.getTurnNumber() + 1);
+        }
+        game.setCurrentPhase(GamePhase.DEPLOY);
+        game.setMoveDoneThisTurn(false);
+        Player nextPlayer = players.get(nextIndex);
+        nextPlayer.setTroopCount(calculateReinforcements(gameId, nextPlayer));
+        game.setTurnStartedAtMillis(System.currentTimeMillis());
+
+        gameRepository.save(game);
+        gameRepository.flush();
+
+        GameStateDTO dto = convertToGameStateDTO(game);
+        dto.setTimedOutPlayerId(timedOutPlayerId);
+        messagingTemplate.convertAndSend("/topic/game/" + game.getId(), dto);
+    }
+
+    /**
+     * Polls every second for games whose current player's turn has exceeded the
+     * configured timer and force-ends them. Cheap because the active-game count
+     * is small; a per-game scheduled task would add more complexity than value.
+     */
+    @Scheduled(fixedRate = 1000)
+    public void enforceTurnTimers() {
+        List<Game> games = gameRepository.findAll();
+        long now = System.currentTimeMillis();
+        for (Game game : games) {
+            if (game.getStatus() != GameStatus.RUNNING) continue;
+            Integer timer = game.getTurnTimerSeconds();
+            Long startedAt = game.getTurnStartedAtMillis();
+            if (timer == null || startedAt == null) continue;
+            long deadline = startedAt + timer * 1000L + 500L; // +500ms grace for clock drift
+            if (now >= deadline) {
+                try {
+                    forceEndTurn(game.getId());
+                } catch (Exception e) {
+                    // Swallow so a single bad game doesn't kill the scheduler.
+                }
+            }
+        }
     }
 
     //update game state broadcaster for turn actions
@@ -145,6 +212,8 @@ public class GameService {
         gameStateDTO.setCurrentPhase(game.getCurrentPhase());
         gameStateDTO.setMoveDoneThisTurn(game.isMoveDoneThisTurn());
         gameStateDTO.setTurnNumber(game.getTurnNumber());
+        gameStateDTO.setTurnTimerSeconds(game.getTurnTimerSeconds());
+        gameStateDTO.setTurnStartedAtMillis(game.getTurnStartedAtMillis());
 
         gameStateDTO.setPlayers(
             game.getPlayerOrder().stream().map(player -> {
@@ -189,6 +258,11 @@ public class GameService {
         game.setCurrentPlayerIndex(0);
         game.setCurrentPhase(GamePhase.DEPLOY);
         game.setTurnNumber(1);
+        game.setTurnTimerSeconds(lobby.getTurnTimerSeconds());
+        // Add a grace period equal to the client's BattleLoading screen so the
+        // first player's timer does not start counting while the battle screen
+        // is still showing.
+        game.setTurnStartedAtMillis(System.currentTimeMillis() + 5000L);
 
         List<Player> players = createPlayers(lobby, game);
         game.setPlayerOrder(players);
@@ -198,7 +272,7 @@ public class GameService {
 
         assignTerritories(map, players);
 
-        
+
 
         game = gameRepository.save(game);
         gameRepository.flush();

@@ -11,6 +11,10 @@ public class LobbyGetDTO {
     private Long joinCode;
     private UserGetDTO host;
     private List<UserGetDTO> jointUsers;
+    private Integer turnTimerSeconds;
+
+    public Integer getTurnTimerSeconds() { return turnTimerSeconds; }
+    public void setTurnTimerSeconds(Integer turnTimerSeconds) { this.turnTimerSeconds = turnTimerSeconds; }
 
     public Long getLobbyId() {
         return lobbyId;

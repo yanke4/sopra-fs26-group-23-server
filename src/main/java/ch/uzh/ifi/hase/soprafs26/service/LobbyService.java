@@ -150,6 +150,30 @@ public class LobbyService {
     broadcastLobbyUpdate(lobby);
 }
 
+    public Lobby updateSettings(Long lobbyId, Long userId, Integer turnTimerSeconds) {
+        Lobby lobby = getLobbyById(lobbyId);
+
+        if (!lobby.getHost().getId().equals(userId)) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "Only the host can change lobby settings."
+            );
+        }
+
+        if (turnTimerSeconds != null && turnTimerSeconds != 30 && turnTimerSeconds != 60) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "turnTimerSeconds must be null, 30 or 60."
+            );
+        }
+
+        lobby.setTurnTimerSeconds(turnTimerSeconds);
+        lobby = lobbyRepository.save(lobby);
+        lobbyRepository.flush();
+        broadcastLobbyUpdate(lobby);
+        return lobby;
+    }
+
     public GameStartDTO startGame(Long lobbyId, Long userId){
         Lobby lobby = getLobbyById(lobbyId);
 

@@ -16,12 +16,24 @@ public class GameStateDTO {
     private AttackEventDTO lastAttack;
     private boolean moveDoneThisTurn;
     private int turnNumber;
+    private Integer turnTimerSeconds;
+    private Long turnStartedAtMillis;
+    private Long timedOutPlayerId; // one-shot: set on the broadcast that follows a forced turn end
 
     public boolean isMoveDoneThisTurn() { return moveDoneThisTurn; }
     public void setMoveDoneThisTurn(boolean moveDoneThisTurn) { this.moveDoneThisTurn = moveDoneThisTurn; }
 
     public int getTurnNumber() { return turnNumber; }
     public void setTurnNumber(int turnNumber) { this.turnNumber = turnNumber; }
+
+    public Integer getTurnTimerSeconds() { return turnTimerSeconds; }
+    public void setTurnTimerSeconds(Integer turnTimerSeconds) { this.turnTimerSeconds = turnTimerSeconds; }
+
+    public Long getTurnStartedAtMillis() { return turnStartedAtMillis; }
+    public void setTurnStartedAtMillis(Long turnStartedAtMillis) { this.turnStartedAtMillis = turnStartedAtMillis; }
+
+    public Long getTimedOutPlayerId() { return timedOutPlayerId; }
+    public void setTimedOutPlayerId(Long timedOutPlayerId) { this.timedOutPlayerId = timedOutPlayerId; }
 
     public static class PlayerStateDTO {
         private Long playerId;
