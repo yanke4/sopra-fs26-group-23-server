@@ -1,6 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -11,6 +12,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
+import ch.uzh.ifi.hase.soprafs26.constant.PlayerColor;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
@@ -53,6 +55,7 @@ public class LobbyService {
                 .map(User::getId)
                 .toList()
         );
+        dto.setColorPreferences(lobby.getColorPreferences());
         messagingTemplate.convertAndSend("/topic/lobby/" + lobby.getLobbyId(), dto);
 }
 
@@ -168,6 +171,30 @@ public class LobbyService {
         }
 
         lobby.setTurnTimerSeconds(turnTimerSeconds);
+        lobby = lobbyRepository.save(lobby);
+        lobbyRepository.flush();
+        broadcastLobbyUpdate(lobby);
+        return lobby;
+    }
+
+    public Lobby selectColor(Long lobbyId, Long userId, PlayerColor color) {
+        Lobby lobby = getLobbyById(lobbyId);
+
+        boolean isHost = lobby.getHost().getId().equals(userId);
+        boolean isJoined = lobby.getJointUsers().stream()
+                .anyMatch(u -> u.getId().equals(userId));
+        if (!isHost && !isJoined) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User is not in this lobby.");
+        }
+
+        for (Map.Entry<Long, PlayerColor> entry : lobby.getColorPreferences().entrySet()) {
+            if (entry.getValue() == color && !entry.getKey().equals(userId)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Color " + color + " is already taken.");
+            }
+        }
+
+        lobby.getColorPreferences().put(userId, color);
         lobby = lobbyRepository.save(lobby);
         lobbyRepository.flush();
         broadcastLobbyUpdate(lobby);

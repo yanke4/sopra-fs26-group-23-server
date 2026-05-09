@@ -2,6 +2,7 @@ package ch.uzh.ifi.hase.soprafs26.service;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -285,28 +286,38 @@ public class GameService {
     }
 
     private List<Player> createPlayers(Lobby lobby, Game game) {
-        // collect all users, host and players
         List<User> allUsers = new ArrayList<>();
         allUsers.add(lobby.getHost());
         allUsers.addAll(lobby.getJointUsers());
-
-        // shuffle to randomize player order
         Collections.shuffle(allUsers);
 
-        PlayerColor[] colors = PlayerColor.values();
-        List<Player> players = new ArrayList<>();
+        java.util.Map<Long, PlayerColor> colorPrefs = lobby.getColorPreferences() != null
+                ? lobby.getColorPreferences()
+                : new HashMap<>();
 
-        for (int i = 0; i < allUsers.size(); i++) {
+        java.util.Set<PlayerColor> takenColors = new java.util.HashSet<>(colorPrefs.values());
+
+        java.util.List<PlayerColor> fallbackColors = Arrays.stream(PlayerColor.values())
+          .filter(c -> !takenColors.contains(c))
+          .collect(java.util.stream.Collectors.toList());
+        int fallbackIdx = 0;
+
+        List<Player> players = new ArrayList<>();
+        for (User user : allUsers) {
             Player player = new Player();
-            player.setUser(allUsers.get(i));
+            player.setUser(user);
             player.setGame(game);
             player.setLobby(lobby);
-            player.setColor(colors[i]);
+
+            PlayerColor color = colorPrefs.containsKey(user.getId())
+                    ? colorPrefs.get(user.getId())
+                    : fallbackColors.get(fallbackIdx++);
+
+            player.setColor(color);
             player.setAlive(true);
-            player.setTroopCount(0L); //inital troop count can be changed later
+            player.setTroopCount(0L);
             players.add(player);
         }
-
         return players;
     }
 

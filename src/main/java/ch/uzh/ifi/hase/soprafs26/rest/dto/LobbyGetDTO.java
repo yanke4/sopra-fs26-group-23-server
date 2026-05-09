@@ -1,9 +1,10 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 
 import java.util.List;
+import java.util.Map;
 
 import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.LobbyGetDTO;
+import ch.uzh.ifi.hase.soprafs26.constant.PlayerColor;
 
 public class LobbyGetDTO {
     private Long lobbyId;
@@ -12,6 +13,14 @@ public class LobbyGetDTO {
     private UserGetDTO host;
     private List<UserGetDTO> jointUsers;
     private Integer turnTimerSeconds;
+    private Map<Long, PlayerColor> colorPreferences;
+
+    public Map<Long, PlayerColor> getColorPreferences() { 
+        return colorPreferences; 
+    }
+    public void setColorPreferences(Map<Long, PlayerColor> colorPreferences) {
+        this.colorPreferences = colorPreferences;
+    }
 
     public Integer getTurnTimerSeconds() { return turnTimerSeconds; }
     public void setTurnTimerSeconds(Integer turnTimerSeconds) { this.turnTimerSeconds = turnTimerSeconds; }

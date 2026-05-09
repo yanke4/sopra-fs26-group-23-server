@@ -84,4 +84,13 @@ public class LobbyController {
             lobbyId, lobbyPutDTO.getUserId(), lobbyPutDTO.getTurnTimerSeconds());
         return LobbyDTOMapper.INSTANCE.convertEntityToLobbyGetDTO(lobby);
     }
+    @PutMapping("/lobbies/{lobbyId}/colors")
+    @ResponseStatus(HttpStatus.OK)
+    @ResponseBody
+    public LobbyGetDTO selectColor(
+            @PathVariable Long lobbyId,
+            @RequestBody LobbyPutDTO lobbyPutDTO) {
+        Lobby lobby = lobbyService.selectColor(lobbyId, lobbyPutDTO.getUserId(), lobbyPutDTO.getColor());
+        return LobbyDTOMapper.INSTANCE.convertEntityToLobbyGetDTO(lobby);
+    }
 }

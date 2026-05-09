@@ -1,5 +1,6 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
+import ch.uzh.ifi.hase.soprafs26.constant.PlayerColor;
 
 public class LobbyPutDTO {
     private LobbyStatus status; //used if status is changed
@@ -7,6 +8,11 @@ public class LobbyPutDTO {
     private Long userId; //used if a user joins or leaves the lobby
 
     private Integer turnTimerSeconds; //used by host to update the lobby's turn timer setting
+
+    private PlayerColor color;
+
+    public PlayerColor getColor() { return color; }
+    public void setColor(PlayerColor color) { this.color = color; }
 
     public Integer getTurnTimerSeconds() { return turnTimerSeconds; }
     public void setTurnTimerSeconds(Integer turnTimerSeconds) { this.turnTimerSeconds = turnTimerSeconds; }

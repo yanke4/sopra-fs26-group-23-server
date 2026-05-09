@@ -1,15 +1,31 @@
 package ch.uzh.ifi.hase.soprafs26.entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
-import jakarta.persistence.*;
-import java.util.ArrayList;
+import ch.uzh.ifi.hase.soprafs26.constant.PlayerColor;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.Table;
 
 
 @Entity
 @Table(name = "LOBBIES")
+
 public class Lobby implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -29,6 +45,14 @@ public class Lobby implements Serializable {
 
     @ManyToMany
     private List<User> jointUsers = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "LOBBY_COLOR_PREFERENCES", joinColumns = @JoinColumn(name = "lobby_id"))
+    @MapKeyColumn(name = "user_id")
+    @Column(name = "color")
+    @Enumerated(EnumType.STRING)
+
+    private Map<Long, PlayerColor> colorPreferences = new HashMap<>();
 
     @Column
     private Integer turnTimerSeconds; // null = no limit
@@ -69,5 +93,11 @@ public class Lobby implements Serializable {
     }
     public void setJointUsers(List<User> jointUsers) {
         this.jointUsers = jointUsers;
+    }
+    public Map<Long, PlayerColor> getColorPreferences() { 
+        return colorPreferences; 
+    }
+    public void setColorPreferences(Map<Long, PlayerColor> colorPreferences) {
+    this.colorPreferences = colorPreferences;
     }
 }
