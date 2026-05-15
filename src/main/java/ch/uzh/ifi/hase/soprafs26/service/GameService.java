@@ -263,6 +263,7 @@ public class GameService {
         // Add a grace period equal to the client's BattleLoading screen so the
         // first player's timer does not start counting while the battle screen
         // is still showing.
+        game.setFogOfWarEnabled(lobby.isFogOfWarEnabled());
         game.setTurnStartedAtMillis(System.currentTimeMillis() + 5000L);
 
         List<Player> players = createPlayers(lobby, game);

@@ -19,6 +19,7 @@ public class GameStateDTO {
     private Integer turnTimerSeconds;
     private Long turnStartedAtMillis;
     private Long timedOutPlayerId; // one-shot: set on the broadcast that follows a forced turn end
+    private boolean fogOfWarEnabled;
 
     public boolean isMoveDoneThisTurn() { return moveDoneThisTurn; }
     public void setMoveDoneThisTurn(boolean moveDoneThisTurn) { this.moveDoneThisTurn = moveDoneThisTurn; }
@@ -33,7 +34,11 @@ public class GameStateDTO {
     public void setTurnStartedAtMillis(Long turnStartedAtMillis) { this.turnStartedAtMillis = turnStartedAtMillis; }
 
     public Long getTimedOutPlayerId() { return timedOutPlayerId; }
-    public void setTimedOutPlayerId(Long timedOutPlayerId) { this.timedOutPlayerId = timedOutPlayerId; }
+
+    public void setTimedOutPlayerId(Long timedOutPlayerId) {this.timedOutPlayerId = timedOutPlayerId;}
+    
+    public boolean isFogOfWarEnabled() { return fogOfWarEnabled; }
+    public void setFogOfWarEnabled(boolean fogOfWarEnabled) { this.fogOfWarEnabled = fogOfWarEnabled; }
 
     public static class PlayerStateDTO {
         private Long playerId;

@@ -57,6 +57,9 @@ public class Lobby implements Serializable {
     @Column
     private Integer turnTimerSeconds; // null = no limit
 
+    @Column
+    private boolean fogOfWarEnabled;
+
     public Integer getTurnTimerSeconds() {
         return turnTimerSeconds;
     }
@@ -97,7 +100,14 @@ public class Lobby implements Serializable {
     public Map<Long, PlayerColor> getColorPreferences() { 
         return colorPreferences; 
     }
+
     public void setColorPreferences(Map<Long, PlayerColor> colorPreferences) {
-    this.colorPreferences = colorPreferences;
+        this.colorPreferences = colorPreferences;
+    }
+    public boolean isFogOfWarEnabled() {
+        return fogOfWarEnabled;
+    }
+    public void setFogOfWarEnabled(boolean fogOfWarEnabled) {
+        this.fogOfWarEnabled = fogOfWarEnabled;
     }
 }

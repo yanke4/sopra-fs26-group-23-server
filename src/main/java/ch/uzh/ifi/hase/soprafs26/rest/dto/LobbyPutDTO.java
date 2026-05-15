@@ -11,6 +11,8 @@ public class LobbyPutDTO {
 
     private PlayerColor color;
 
+    private boolean fogOfWarEnabled;
+
     public PlayerColor getColor() { return color; }
     public void setColor(PlayerColor color) { this.color = color; }
 
@@ -26,7 +28,15 @@ public class LobbyPutDTO {
     public Long getUserId() {
         return userId;
     }
+
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+    public boolean isFogOfWarEnabled() {
+        return fogOfWarEnabled;
+    }
+
+    public void setFogOfWarEnabled(boolean fogOfWarEnabled) {
+        this.fogOfWarEnabled = fogOfWarEnabled;
     }
 }

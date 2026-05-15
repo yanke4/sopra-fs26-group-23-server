@@ -14,6 +14,7 @@ public class LobbyGetDTO {
     private List<UserGetDTO> jointUsers;
     private Integer turnTimerSeconds;
     private Map<Long, PlayerColor> colorPreferences;
+    private boolean fogOfWarEnabled;
 
     public Map<Long, PlayerColor> getColorPreferences() { 
         return colorPreferences; 
@@ -53,7 +54,15 @@ public class LobbyGetDTO {
     public List<UserGetDTO> getJointUsers() {
         return jointUsers;
     }
+
     public void setJointUsers(List<UserGetDTO> jointUsers) {
         this.jointUsers = jointUsers;
+    }
+
+    public boolean isFogOfWarEnabled() {
+        return fogOfWarEnabled;
+    }
+    public void setFogOfWarEnabled(boolean fogOfWarEnabled) {
+        this.fogOfWarEnabled = fogOfWarEnabled;
     }
 }

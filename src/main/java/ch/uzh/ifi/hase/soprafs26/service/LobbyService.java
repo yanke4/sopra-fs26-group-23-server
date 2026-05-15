@@ -153,7 +153,7 @@ public class LobbyService {
     broadcastLobbyUpdate(lobby);
 }
 
-    public Lobby updateSettings(Long lobbyId, Long userId, Integer turnTimerSeconds) {
+    public Lobby updateSettings(Long lobbyId, Long userId, Integer turnTimerSeconds, boolean fogOfWarEnabled) {
         Lobby lobby = getLobbyById(lobbyId);
 
         if (!lobby.getHost().getId().equals(userId)) {
@@ -171,6 +171,7 @@ public class LobbyService {
         }
 
         lobby.setTurnTimerSeconds(turnTimerSeconds);
+        lobby.setFogOfWarEnabled(fogOfWarEnabled);
         lobby = lobbyRepository.save(lobby);
         lobbyRepository.flush();
         broadcastLobbyUpdate(lobby);

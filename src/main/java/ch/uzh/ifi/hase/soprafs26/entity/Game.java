@@ -45,6 +45,9 @@ public class Game implements Serializable {
     @Column
     private Long turnStartedAtMillis; // epoch millis when the current player's turn began
 
+    @Column
+    private boolean fogOfWarEnabled;
+
     @Enumerated(EnumType.STRING)
     private GameStatus status; //either waiting, running or finished
 
@@ -144,4 +147,10 @@ public void setMoveDoneThisTurn(boolean moveDoneThisTurn) {
         this.turnStartedAtMillis = turnStartedAtMillis;
     }
 
+    public boolean isFogOfWarEnabled() {
+        return fogOfWarEnabled;
+    }
+    public void setFogOfWarEnabled(boolean fogOfWarEnabled) {
+        this.fogOfWarEnabled = fogOfWarEnabled;
+    }
 }
