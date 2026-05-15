@@ -1,15 +1,16 @@
 package ch.uzh.ifi.hase.soprafs26.service;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 import ch.uzh.ifi.hase.soprafs26.entity.Field;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Player;
 import ch.uzh.ifi.hase.soprafs26.entity.Region;
 import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.stereotype.Service;
 @Service
+@Transactional
 public class FieldService {
     public final GameRepository gameRepository;
 

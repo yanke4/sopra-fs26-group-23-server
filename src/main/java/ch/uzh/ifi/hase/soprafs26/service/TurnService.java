@@ -7,6 +7,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
@@ -25,6 +26,7 @@ import ch.uzh.ifi.hase.soprafs26.rest.dto.TurnMoveDTO.Move;
 
 
 @Service
+@Transactional
 public class TurnService {
 
     private final FieldService fieldService;

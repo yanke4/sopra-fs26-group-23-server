@@ -2,13 +2,16 @@ package ch.uzh.ifi.hase.soprafs26.service;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Player;
 import ch.uzh.ifi.hase.soprafs26.entity.Region;
-import org.springframework.web.server.ResponseStatusException;
+import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
 
 @Service
+@Transactional
 public class RegionService {
 
     private final GameRepository gameRepository;
