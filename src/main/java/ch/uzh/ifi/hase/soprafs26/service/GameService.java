@@ -215,6 +215,7 @@ public class GameService {
         gameStateDTO.setTurnNumber(game.getTurnNumber());
         gameStateDTO.setTurnTimerSeconds(game.getTurnTimerSeconds());
         gameStateDTO.setTurnStartedAtMillis(game.getTurnStartedAtMillis());
+        gameStateDTO.setFogOfWarEnabled(game.isFogOfWarEnabled());
 
         gameStateDTO.setPlayers(
             game.getPlayerOrder().stream().map(player -> {
