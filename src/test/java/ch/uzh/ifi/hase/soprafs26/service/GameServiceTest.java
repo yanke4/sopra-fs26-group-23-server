@@ -41,6 +41,9 @@ public class GameServiceTest {
     @Mock
     private RegionService regionService;
 
+    @Mock
+    private MissionService missionService;
+
     private GameService gameService;
 
     private Game game;
@@ -50,7 +53,7 @@ public class GameServiceTest {
     @BeforeEach
     public void setup() {
         MockitoAnnotations.openMocks(this);
-        gameService = new GameService(gameRepository, messagingTemplate, regionService);
+        gameService = new GameService(gameRepository, messagingTemplate, regionService, missionService);
 
         playerA = buildPlayer(PLAYER_A_ID, true);
         playerB = buildPlayer(PLAYER_B_ID, true);

@@ -75,6 +75,8 @@ public class TurnService {
         }
         activePlayer.setTroopCount(activePlayer.getTroopCount() - totalTroops);
 
+        gameService.refreshMissions(game);
+
         //Actualize Game state and send update to clients via WebSocket
         gameService.broadcastGameUpdate(gameId);
 
@@ -93,6 +95,10 @@ public class TurnService {
 
         Long requestingPlayerId = turnAttackDTO.getPlayerId();
         GameStateDTO.AttackEventDTO lastAttackEvent = null;
+
+        if (turnAttackDTO.getAttacks() != null && !turnAttackDTO.getAttacks().isEmpty()) {
+            activePlayer.setHasAttackedThisTurn(true);
+        }
 
         for (Attack attack: turnAttackDTO.getAttacks()) {
             Field attackingField = fieldService.getFieldByName(attack.getAttackingField(), gameId);
@@ -152,20 +158,25 @@ public class TurnService {
             if (conquered) {
                 defendingField.setOwner(attackingField.getOwner());
                 defendingField.setTroops(attackingTroops);
+                activePlayer.setTerritoriesConqueredThisTurn(activePlayer.getTerritoriesConqueredThisTurn() + 1);
             } else {
                 defendingField.setTroops(defendingTroops);
             }
+
+            long defenderLosses = originalDefendingTroops - defendingTroops;
+            activePlayer.setTroopsKilledThisTurn(activePlayer.getTroopsKilledThisTurn() + defenderLosses);
 
             lastAttackEvent = new GameStateDTO.AttackEventDTO();
             lastAttackEvent.setAttacker(attackingField.getName());
             lastAttackEvent.setDefender(defendingField.getName());
             lastAttackEvent.setAttackerLosses(troopsUsed - (conquered ? attackingTroops : 0));
-            lastAttackEvent.setDefenderLosses(originalDefendingTroops - defendingTroops);
+            lastAttackEvent.setDefenderLosses(defenderLosses);
             lastAttackEvent.setConquered(conquered);
         }
 
         gameRepository.flush();
-        checkAndHandleWinCondition(game);
+        checkAndHandleWinCondition(game, activePlayer);
+        gameService.refreshMissions(game);
         gameService.broadcastGameUpdate(gameId, lastAttackEvent);
     }
 
@@ -216,17 +227,21 @@ public class TurnService {
             fieldService.addUnits(toFieldName, troops, gameId);
         }
         game.setMoveDoneThisTurn(true);
+        gameService.refreshMissions(game);
         gameRepository.save(game);
         gameRepository.flush();
         gameService.broadcastGameUpdate(gameId);
     }
 
-    private void checkAndHandleWinCondition(Game game) {
+    private void checkAndHandleWinCondition(Game game, Player attacker) {
     for (Player player : game.getPlayerOrder()) {
         if (player.isAlive()) {
             int territoryCount = fieldService.countTerritoriesOwnedByPlayer(game.getId(), player);
             if (territoryCount == 0) {
                 player.setAlive(false);
+                if (attacker != null && !attacker.getPlayerId().equals(player.getPlayerId())) {
+                    attacker.setEliminationsCaused(attacker.getEliminationsCaused() + 1);
+                }
             }
         }
     }

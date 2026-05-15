@@ -41,12 +41,14 @@ public class GameService {
     private final GameRepository gameRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final RegionService regionService;
+    private final MissionService missionService;
 
     public GameService(GameRepository gameRepository, SimpMessagingTemplate messagingTemplate,
-                       RegionService regionService) {
+                       RegionService regionService, MissionService missionService) {
         this.gameRepository = gameRepository;
         this.messagingTemplate = messagingTemplate;
         this.regionService = regionService;
+        this.missionService = missionService;
     }
 
     private long calculateReinforcements(Long gameId, Player player) {
@@ -89,6 +91,9 @@ public class GameService {
             case FORTIFY:
                 // Move to next alive player and reset to DEPLOY
                 game.setMoveDoneThisTurn(false);
+                if (!currentPlayer.isHasAttackedThisTurn()) {
+                    currentPlayer.setPeacefulTurnsCompleted(currentPlayer.getPeacefulTurnsCompleted() + 1);
+                }
                 int nextIndex = game.getCurrentPlayerIndex();
                 List<Player> players = game.getPlayerOrder();
                 int startIndex = nextIndex;
@@ -102,14 +107,32 @@ public class GameService {
                 }
                 game.setCurrentPhase(GamePhase.DEPLOY);
                 Player nextPlayer = players.get(nextIndex);
-                nextPlayer.setTroopCount(calculateReinforcements(gameId, nextPlayer));
+                nextPlayer.setTroopCount(calculateReinforcements(gameId, nextPlayer) + nextPlayer.getPendingMissionBonus());
+                nextPlayer.setPendingMissionBonus(0L);
+                nextPlayer.setTroopsKilledThisTurn(0L);
+                nextPlayer.setHasAttackedThisTurn(false);
+                nextPlayer.setTerritoriesConqueredThisTurn(0);
                 game.setTurnStartedAtMillis(System.currentTimeMillis());
                 break;
         }
 
+        refreshMissions(game);
+
         gameRepository.save(game);
         gameRepository.flush();
         broadcastGameState(game);
+    }
+
+    /**
+     * Rotates expired missions and evaluates active ones for every alive player.
+     * Called after each state-changing action so completion is visible immediately.
+     */
+    public void refreshMissions(Game game) {
+        for (Player player : game.getPlayerOrder()) {
+            if (!player.isAlive()) continue;
+            missionService.rotateIfDue(player, game);
+            missionService.evaluateAndReward(player, game);
+        }
     }
 
     /**
@@ -126,6 +149,9 @@ public class GameService {
         Long timedOutPlayerId = currentPlayer.getPlayerId();
 
         currentPlayer.setTroopCount(0L);
+        if (!currentPlayer.isHasAttackedThisTurn()) {
+            currentPlayer.setPeacefulTurnsCompleted(currentPlayer.getPeacefulTurnsCompleted() + 1);
+        }
 
         List<Player> players = game.getPlayerOrder();
         int startIndex = game.getCurrentPlayerIndex();
@@ -141,8 +167,14 @@ public class GameService {
         game.setCurrentPhase(GamePhase.DEPLOY);
         game.setMoveDoneThisTurn(false);
         Player nextPlayer = players.get(nextIndex);
-        nextPlayer.setTroopCount(calculateReinforcements(gameId, nextPlayer));
+        nextPlayer.setTroopCount(calculateReinforcements(gameId, nextPlayer) + nextPlayer.getPendingMissionBonus());
+        nextPlayer.setPendingMissionBonus(0L);
+        nextPlayer.setTroopsKilledThisTurn(0L);
+        nextPlayer.setHasAttackedThisTurn(false);
+        nextPlayer.setTerritoriesConqueredThisTurn(0);
         game.setTurnStartedAtMillis(System.currentTimeMillis());
+
+        refreshMissions(game);
 
         gameRepository.save(game);
         gameRepository.flush();
@@ -217,6 +249,7 @@ public class GameService {
         gameStateDTO.setTurnStartedAtMillis(game.getTurnStartedAtMillis());
         gameStateDTO.setFogOfWarEnabled(game.isFogOfWarEnabled());
 
+        final int currentRound = game.getTurnNumber();
         gameStateDTO.setPlayers(
             game.getPlayerOrder().stream().map(player -> {
                 GameStateDTO.PlayerStateDTO playerDTO = new GameStateDTO.PlayerStateDTO();
@@ -226,6 +259,14 @@ public class GameService {
                 playerDTO.setColor(player.getColor());
                 playerDTO.setAlive(player.isAlive());
                 playerDTO.setTroopCount(player.getTroopCount());
+                if (player.getCurrentMissionType() != null) {
+                    playerDTO.setMissionType(player.getCurrentMissionType());
+                    playerDTO.setMissionDescription(player.getCurrentMissionType().getDescription());
+                    playerDTO.setMissionStatus(player.computeMissionStatus(currentRound));
+                    playerDTO.setMissionStartRound(player.getMissionStartRound());
+                    playerDTO.setMissionExpiresAtRound(player.getMissionStartRound() + 3);
+                    playerDTO.setMissionBonusTroops(player.getCurrentMissionType().getBonusTroops());
+                }
                 return playerDTO;
             }).collect(Collectors.toList())
         );
@@ -276,6 +317,10 @@ public class GameService {
         assignTerritories(map, players);
 
 
+
+        for (Player player : players) {
+            missionService.assignInitialMission(player, game);
+        }
 
         game = gameRepository.save(game);
         gameRepository.flush();

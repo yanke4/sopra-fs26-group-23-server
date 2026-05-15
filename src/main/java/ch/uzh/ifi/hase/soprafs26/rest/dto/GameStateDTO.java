@@ -3,6 +3,8 @@ import java.util.List;
 
 import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
+import ch.uzh.ifi.hase.soprafs26.constant.MissionStatus;
+import ch.uzh.ifi.hase.soprafs26.constant.MissionType;
 import ch.uzh.ifi.hase.soprafs26.constant.PlayerColor;
 
 public class GameStateDTO {
@@ -47,7 +49,13 @@ public class GameStateDTO {
         private PlayerColor color;
         private boolean alive;
         private Long troopCount;
-        
+        private MissionType missionType;
+        private String missionDescription;
+        private MissionStatus missionStatus;
+        private int missionStartRound;
+        private int missionExpiresAtRound;
+        private int missionBonusTroops;
+
 
         public Long getPlayerId() { return playerId; }
         public void setPlayerId(Long playerId) { this.playerId = playerId; }
@@ -61,7 +69,19 @@ public class GameStateDTO {
         public void setAlive(boolean alive) { this.alive = alive; }
         public Long getTroopCount() { return troopCount; }
         public void setTroopCount(Long troopCount) { this.troopCount = troopCount; }
-        
+        public MissionType getMissionType() { return missionType; }
+        public void setMissionType(MissionType missionType) { this.missionType = missionType; }
+        public String getMissionDescription() { return missionDescription; }
+        public void setMissionDescription(String missionDescription) { this.missionDescription = missionDescription; }
+        public MissionStatus getMissionStatus() { return missionStatus; }
+        public void setMissionStatus(MissionStatus missionStatus) { this.missionStatus = missionStatus; }
+        public int getMissionStartRound() { return missionStartRound; }
+        public void setMissionStartRound(int missionStartRound) { this.missionStartRound = missionStartRound; }
+        public int getMissionExpiresAtRound() { return missionExpiresAtRound; }
+        public void setMissionExpiresAtRound(int missionExpiresAtRound) { this.missionExpiresAtRound = missionExpiresAtRound; }
+        public int getMissionBonusTroops() { return missionBonusTroops; }
+        public void setMissionBonusTroops(int missionBonusTroops) { this.missionBonusTroops = missionBonusTroops; }
+
     }
 
     public static class FieldStateDTO {
