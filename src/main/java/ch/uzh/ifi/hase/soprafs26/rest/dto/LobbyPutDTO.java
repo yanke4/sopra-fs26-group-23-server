@@ -7,6 +7,8 @@ public class LobbyPutDTO {
 
     private Long userId; //used if a user joins or leaves the lobby
 
+    private Long targetUserId; //used by host to kick a specific member
+
     private Integer turnTimerSeconds; //used by host to update the lobby's turn timer setting
 
     private PlayerColor color;
@@ -32,6 +34,15 @@ public class LobbyPutDTO {
     public void setUserId(Long userId) {
         this.userId = userId;
     }
+
+    public Long getTargetUserId() {
+        return targetUserId;
+    }
+
+    public void setTargetUserId(Long targetUserId) {
+        this.targetUserId = targetUserId;
+    }
+
     public boolean isFogOfWarEnabled() {
         return fogOfWarEnabled;
     }

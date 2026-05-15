@@ -153,6 +153,43 @@ public class LobbyService {
     broadcastLobbyUpdate(lobby);
 }
 
+    public void kickMember(Long lobbyId, Long hostId, Long targetUserId) {
+        Lobby lobby = getLobbyById(lobbyId);
+
+        if (!lobby.getHost().getId().equals(hostId)) {
+            throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "Only the host can kick members."
+            );
+        }
+
+        if (targetUserId == null || targetUserId.equals(hostId)) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Host cannot kick themselves."
+            );
+        }
+
+        boolean wasMember = lobby.getJointUsers().stream()
+            .anyMatch(u -> u.getId().equals(targetUserId));
+        if (!wasMember) {
+            throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "User " + targetUserId + " is not in this lobby."
+            );
+        }
+
+        List<User> remaining = lobby.getJointUsers().stream()
+            .filter(u -> !u.getId().equals(targetUserId))
+            .collect(java.util.stream.Collectors.toList());
+        lobby.setJointUsers(remaining);
+        lobby.getColorPreferences().remove(targetUserId);
+
+        lobby = lobbyRepository.save(lobby);
+        lobbyRepository.flush();
+        broadcastLobbyUpdate(lobby);
+    }
+
     public Lobby updateSettings(Long lobbyId, Long userId, Integer turnTimerSeconds, boolean fogOfWarEnabled) {
         Lobby lobby = getLobbyById(lobbyId);
 

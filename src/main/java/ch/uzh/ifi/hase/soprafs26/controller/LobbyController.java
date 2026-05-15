@@ -65,6 +65,14 @@ public class LobbyController {
     lobbyService.leaveLobby(lobbyId, userId);
     }
 
+    @PostMapping("/lobbies/{lobbyId}/kick")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void kickMember(
+        @PathVariable Long lobbyId,
+        @RequestBody LobbyPutDTO lobbyPutDTO) {
+        lobbyService.kickMember(lobbyId, lobbyPutDTO.getUserId(), lobbyPutDTO.getTargetUserId());
+    }
+
     @PutMapping("/lobbies/{lobbyId}/start")
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
