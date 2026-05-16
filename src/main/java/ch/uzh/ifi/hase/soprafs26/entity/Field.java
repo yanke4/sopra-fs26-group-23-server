@@ -7,6 +7,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -26,7 +28,12 @@ public class Field implements Serializable{
     @ManyToOne
     private Region region;
     @ManyToMany(fetch = jakarta.persistence.FetchType.EAGER)
-    private List<Field> neighbours; 
+    @JoinTable(
+        name = "field_neighbours",
+        joinColumns = @JoinColumn(name = "field_id"),
+        inverseJoinColumns = @JoinColumn(name = "neighbour_id")
+    )
+    private List<Field> neighbours;
 
 
     public void addTroops(Long troopsToAdd){
