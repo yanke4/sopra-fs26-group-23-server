@@ -23,7 +23,8 @@ public class Game implements Serializable {
     private Long id;
 
 
-    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL) // cascade: when a game gets saved or deleted,the players get saved or deleted as well
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL)
+    @jakarta.persistence.OrderColumn(name = "player_order_index")
     private List<Player> playerOrder;
     
     @OneToOne(cascade = CascadeType.ALL) 
