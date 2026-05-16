@@ -76,6 +76,10 @@ public class TurnService {
             fieldService.addUnits(fieldName, troops, gameId);
         }
         activePlayer.setTroopCount(activePlayer.getTroopCount() - totalTroops);
+        
+        if (activePlayer.getTroopCount() == 0L) {
+            game.setCurrentPhase(GamePhase.ATTACK);
+        }
 
         gameService.refreshMissions(game);
 
