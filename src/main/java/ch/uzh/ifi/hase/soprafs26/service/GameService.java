@@ -316,18 +316,17 @@ public class GameService {
 
         assignTerritories(map, players);
 
-
-
-        for (Player player : players) {
-            missionService.assignInitialMission(player, game);
-        }
-
         game = gameRepository.save(game);
         gameRepository.flush();
+
+        for (Player player : game.getPlayerOrder()) {
+            missionService.assignInitialMission(player, game);
+        }
 
         Player firstPlayer = game.getPlayerOrder().get(0);
         firstPlayer.setTroopCount(calculateReinforcements(game.getId(), firstPlayer));
 
+        gameRepository.flush();
         broadcastGameState(game);
         return game;
     }
