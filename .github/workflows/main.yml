@@ -70,6 +70,7 @@ jobs:
             --min-instances=1
             --memory=512Mi
           env_vars: |
+            SPRING_PROFILES_ACTIVE=production
             DATABASE_URL=${{ secrets.DATABASE_URL }}
             DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
             DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
