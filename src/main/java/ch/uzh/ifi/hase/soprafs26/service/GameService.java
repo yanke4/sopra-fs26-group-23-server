@@ -210,14 +210,14 @@ public class GameService {
     }
 
     //update game state broadcaster for turn actions
-    public void broadcastGameUpdate(Long gameId){
-        Game game = gameRepository.findWithFullGraphById(gameId)
+    public void broadcastGameUpdate(Long gameId) {
+        Game game = gameRepository.findById(gameId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game " + gameId + " not found."));
         broadcastGameState(game);
     }
 
-    public void broadcastGameUpdate(Long gameId, GameStateDTO.AttackEventDTO lastAttack){
-        Game game = gameRepository.findWithFullGraphById(gameId)
+    public void broadcastGameUpdate(Long gameId, GameStateDTO.AttackEventDTO lastAttack) {
+        Game game = gameRepository.findById(gameId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game " + gameId + " not found."));
         GameStateDTO gameStateDTO = convertToGameStateDTO(game);
         gameStateDTO.setLastAttack(lastAttack);
