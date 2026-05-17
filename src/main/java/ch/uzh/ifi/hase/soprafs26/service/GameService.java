@@ -57,7 +57,7 @@ public class GameService {
     }
 
     public GameStateDTO getGameState(Long gameId) {
-        Game game = gameRepository.findWithFullGraphById(gameId)
+        Game game = gameRepository.findById(gameId)
             .orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
                 "Game " + gameId + " not found."
@@ -186,8 +186,7 @@ public class GameService {
 
     /**
      * Polls every second for games whose current player's turn has exceeded the
-     * configured timer and force-ends them. Cheap because the active-game count
-     * is small; a per-game scheduled task would add more complexity than value.
+     * configured timer and force-ends them.
      */
     @Scheduled(fixedRate = 1000)
     public void enforceTurnTimers() {
@@ -209,7 +208,6 @@ public class GameService {
         }
     }
 
-    //update game state broadcaster for turn actions
     public void broadcastGameUpdate(Long gameId) {
         Game game = gameRepository.findById(gameId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game " + gameId + " not found."));
@@ -227,16 +225,14 @@ public class GameService {
     public void broadcastGameState(Game game) {
         GameStateDTO gameStateDTO = convertToGameStateDTO(game);
         messagingTemplate.convertAndSend("/topic/game/" + game.getId(), gameStateDTO);
-        }
+    }
 
     public void broadcastGameState(Game game, GameStateDTO.AttackEventDTO lastAttack) {
-    GameStateDTO gameStateDTO = convertToGameStateDTO(game);
-    gameStateDTO.setLastAttack(lastAttack);
-    messagingTemplate.convertAndSend("/topic/game/" + game.getId(), gameStateDTO);
-        }
-    
+        GameStateDTO gameStateDTO = convertToGameStateDTO(game);
+        gameStateDTO.setLastAttack(lastAttack);
+        messagingTemplate.convertAndSend("/topic/game/" + game.getId(), gameStateDTO);
+    }
 
-    //helper method to convert Game entity to GameStateDTO
     private GameStateDTO convertToGameStateDTO(Game game) {
         GameStateDTO gameStateDTO = new GameStateDTO();
         gameStateDTO.setGameId(game.getId());
@@ -282,9 +278,8 @@ public class GameService {
                     return fieldDTO;
                 }).collect(Collectors.toList())
         );
-        return gameStateDTO;     
+        return gameStateDTO;
     }
-    
 
     private Long generateUniqueGameId() {
         Random random = new Random();
@@ -303,9 +298,6 @@ public class GameService {
         game.setCurrentPhase(GamePhase.DEPLOY);
         game.setTurnNumber(1);
         game.setTurnTimerSeconds(lobby.getTurnTimerSeconds());
-        // Add a grace period equal to the client's BattleLoading screen so the
-        // first player's timer does not start counting while the battle screen
-        // is still showing.
         game.setFogOfWarEnabled(lobby.isFogOfWarEnabled());
         game.setTurnStartedAtMillis(System.currentTimeMillis() + 5000L);
 
@@ -378,7 +370,6 @@ public class GameService {
             HashMap<String, Field> fieldsByName = new HashMap<>();
             List<Region> regions = new ArrayList<>();
 
-            // create regions and fields
             for (JsonNode regionNode : root.get("regions")) {
                 Region region = new Region();
                 region.setName(regionNode.get("name").asText());
@@ -425,8 +416,6 @@ public class GameService {
 
         Collections.shuffle(allFields);
 
-        // each player gets 2 non-adjacent territories with 2 and 3 troops
-        // additionally, no player's spawn may be adjacent to any other player's spawn
         List<Field> available = new ArrayList<>(allFields);
         Set<String> claimedNames = new HashSet<>();
         for (Player player : players) {
@@ -437,7 +426,6 @@ public class GameService {
                 field2 = findSpawnPartner(field1, available, claimedNames, true);
             }
 
-            // fallback 1: relax cross-player non-adjacency, keep intra-player non-adjacency
             if (field1 == null || field2 == null) {
                 field1 = findSpawnPair(available, claimedNames, false);
                 if (field1 != null) {
@@ -445,7 +433,6 @@ public class GameService {
                 }
             }
 
-            // fallback 2: take any two remaining fields
             if (field1 == null || field2 == null) {
                 field1 = available.get(0);
                 field2 = available.get(1);
@@ -462,7 +449,6 @@ public class GameService {
             field2.setTroops(3L);
         }
 
-        // remaining fields are neutral with 1 troop each
         for (Field field : available) {
             field.setOwner(null);
             field.setTroops(1L);
@@ -503,7 +489,8 @@ public class GameService {
         if (names.isEmpty() || field.getNeighbours() == null) return false;
         return field.getNeighbours().stream().anyMatch(n -> names.contains(n.getName()));
     }
+
     public void assignReinforcementsToPlayer(Long gameId, Player player) {
         player.setTroopCount(calculateReinforcements(gameId, player));
-}
+    }
 }
