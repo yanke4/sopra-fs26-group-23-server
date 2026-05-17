@@ -57,7 +57,7 @@ public class GameService {
     }
 
     public GameStateDTO getGameState(Long gameId) {
-        Game game = gameRepository.findById(gameId)
+        Game game = gameRepository.findWithFullGraphById(gameId)
             .orElseThrow(() -> new ResponseStatusException(
                 HttpStatus.NOT_FOUND,
                 "Game " + gameId + " not found."
@@ -211,20 +211,14 @@ public class GameService {
 
     //update game state broadcaster for turn actions
     public void broadcastGameUpdate(Long gameId){
-        Game game = gameRepository.findById(gameId)
-            .orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Game " + gameId + " not found."
-            ));
+        Game game = gameRepository.findWithFullGraphById(gameId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game " + gameId + " not found."));
         broadcastGameState(game);
     }
 
     public void broadcastGameUpdate(Long gameId, GameStateDTO.AttackEventDTO lastAttack){
-        Game game = gameRepository.findById(gameId)
-            .orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Game " + gameId + " not found."
-            ));
+        Game game = gameRepository.findWithFullGraphById(gameId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Game " + gameId + " not found."));
         GameStateDTO gameStateDTO = convertToGameStateDTO(game);
         gameStateDTO.setLastAttack(lastAttack);
         messagingTemplate.convertAndSend("/topic/game/" + game.getId(), gameStateDTO);
@@ -234,6 +228,13 @@ public class GameService {
         GameStateDTO gameStateDTO = convertToGameStateDTO(game);
         messagingTemplate.convertAndSend("/topic/game/" + game.getId(), gameStateDTO);
         }
+
+    public void broadcastGameState(Game game, GameStateDTO.AttackEventDTO lastAttack) {
+    GameStateDTO gameStateDTO = convertToGameStateDTO(game);
+    gameStateDTO.setLastAttack(lastAttack);
+    messagingTemplate.convertAndSend("/topic/game/" + game.getId(), gameStateDTO);
+        }
+    
 
     //helper method to convert Game entity to GameStateDTO
     private GameStateDTO convertToGameStateDTO(Game game) {

@@ -27,11 +27,11 @@ public class Field implements Serializable{
     private Player owner; 
     @ManyToOne
     private Region region;
-    @ManyToMany(fetch = jakarta.persistence.FetchType.EAGER)
-    @JoinTable(
-        name = "field_neighbours",
-        joinColumns = @JoinColumn(name = "field_id"),
-        inverseJoinColumns = @JoinColumn(name = "neighbour_id")
+    @ManyToMany(fetch = jakarta.persistence.FetchType.LAZY)
+@   JoinTable(
+    name = "field_neighbours",
+    joinColumns = @JoinColumn(name = "field_id"),
+    inverseJoinColumns = @JoinColumn(name = "neighbour_id")
     )
     private List<Field> neighbours;
 

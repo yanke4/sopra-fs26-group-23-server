@@ -87,7 +87,7 @@ public class TurnService {
         gameService.refreshMissions(game);
 
         //Actualize Game state and send update to clients via WebSocket
-        gameService.broadcastGameUpdate(gameId);
+        gameService.broadcastGameState(game);
 
 
     }
@@ -186,7 +186,7 @@ public class TurnService {
         gameRepository.flush();
         checkAndHandleWinCondition(game, activePlayer);
         gameService.refreshMissions(game);
-        gameService.broadcastGameUpdate(gameId, lastAttackEvent);
+        gameService.broadcastGameState(game, lastAttackEvent);
     }
 
 
@@ -239,7 +239,7 @@ public class TurnService {
         gameService.refreshMissions(game);
         gameRepository.save(game);
         gameRepository.flush();
-        gameService.broadcastGameUpdate(gameId);
+        gameService.broadcastGameState(game);
     }
 
     private void checkAndHandleWinCondition(Game game, Player attacker) {
