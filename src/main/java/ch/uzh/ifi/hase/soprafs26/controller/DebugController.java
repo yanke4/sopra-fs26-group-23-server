@@ -113,9 +113,9 @@ public class DebugController {
                 body.put("turnTimerSeconds_error", describe(t));
             }
             try {
-                body.put("fogOfWarEnabled", lobby.isFogOfWarEnabled());
+                body.put("fogOfWarMode", lobby.getFogOfWarMode());
             } catch (Throwable t) {
-                body.put("fogOfWarEnabled_error", describe(t));
+                body.put("fogOfWarMode_error", describe(t));
             }
             try {
                 LobbyDTOMapper.INSTANCE.convertEntityToLobbyGetDTO(lobby);

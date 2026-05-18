@@ -60,8 +60,8 @@ public class LobbyGetDTO {
         this.jointUsers = jointUsers;
     }
 
-    public FogOfWarMode getFogOfWarEnabled() {
-        return fogOfWarEnabled;
+    public FogOfWarMode getFogOfWarMode() {
+        return fogOfWarMode;
     }
     public void setFogOfWarMode(FogOfWarMode fogOfWarMode) {
         this.fogOfWarMode = fogOfWarMode;

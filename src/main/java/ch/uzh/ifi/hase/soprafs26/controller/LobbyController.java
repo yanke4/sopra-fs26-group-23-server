@@ -89,7 +89,7 @@ public class LobbyController {
         @PathVariable Long lobbyId,
         @RequestBody LobbyPutDTO lobbyPutDTO) {
         Lobby lobby = lobbyService.updateSettings(
-            lobbyId, lobbyPutDTO.getUserId(), lobbyPutDTO.getTurnTimerSeconds(), lobbyPutDTO.isFogOfWarEnabled());
+            lobbyId, lobbyPutDTO.getUserId(), lobbyPutDTO.getTurnTimerSeconds(), lobbyPutDTO.getFogOfWarMode());
         return LobbyDTOMapper.INSTANCE.convertEntityToLobbyGetDTO(lobby);
     }
     @PutMapping("/lobbies/{lobbyId}/colors")
