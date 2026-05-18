@@ -308,6 +308,9 @@ public class GameService {
         Map map = createMap();
         game.setMap(map);
 
+        game = gameRepository.save(game);
+        gameRepository.flush();
+
         assignTerritories(map, players);
 
         game = gameRepository.save(game);
