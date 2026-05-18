@@ -1,6 +1,7 @@
 package ch.uzh.ifi.hase.soprafs26.rest.dto;
 import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.PlayerColor;
+import ch.uzh.ifi.hase.soprafs26.constant.FogOfWarMode;
 
 public class LobbyPutDTO {
     private LobbyStatus status; //used if status is changed
@@ -13,7 +14,7 @@ public class LobbyPutDTO {
 
     private PlayerColor color;
 
-    private boolean fogOfWarEnabled;
+    private FogOfWarMode fogOfWarMode;
 
     public PlayerColor getColor() { return color; }
     public void setColor(PlayerColor color) { this.color = color; }
@@ -43,11 +44,11 @@ public class LobbyPutDTO {
         this.targetUserId = targetUserId;
     }
 
-    public boolean isFogOfWarEnabled() {
-        return fogOfWarEnabled;
+    public FogOfWarMode getFogOfWarMode() {
+        return fogOfWarMode;
     }
 
-    public void setFogOfWarEnabled(boolean fogOfWarEnabled) {
-        this.fogOfWarEnabled = fogOfWarEnabled;
+    public void setFogOfWarMode(FogOfWarMode fogOfWarMode) {
+        this.fogOfWarMode = fogOfWarMode;
     }
 }

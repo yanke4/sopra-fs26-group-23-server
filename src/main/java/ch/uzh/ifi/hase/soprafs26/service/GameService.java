@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.PlayerColor;
+import ch.uzh.ifi.hase.soprafs26.constant.FogOfWarMode;
 import ch.uzh.ifi.hase.soprafs26.entity.Field;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
@@ -244,7 +245,7 @@ public class GameService {
         gameStateDTO.setTurnNumber(game.getTurnNumber());
         gameStateDTO.setTurnTimerSeconds(game.getTurnTimerSeconds());
         gameStateDTO.setTurnStartedAtMillis(game.getTurnStartedAtMillis());
-        gameStateDTO.setFogOfWarEnabled(game.isFogOfWarEnabled());
+        gameStateDTO.setFogOfWarMode(game.getFogOfWarMode());
 
         final int currentRound = game.getTurnNumber();
         gameStateDTO.setPlayers(
@@ -298,7 +299,7 @@ public class GameService {
         game.setCurrentPhase(GamePhase.DEPLOY);
         game.setTurnNumber(1);
         game.setTurnTimerSeconds(lobby.getTurnTimerSeconds());
-        game.setFogOfWarEnabled(lobby.isFogOfWarEnabled());
+        game.setFogOfWarMode(lobby.getFogOfWarMode());
         game.setTurnStartedAtMillis(System.currentTimeMillis() + 5000L);
 
         List<Player> players = createPlayers(lobby, game);

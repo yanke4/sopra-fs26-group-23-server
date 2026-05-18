@@ -8,6 +8,7 @@ import java.util.Map;
 
 import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.PlayerColor;
+import ch.uzh.ifi.hase.soprafs26.constant.FogOfWarMode;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -51,14 +52,14 @@ public class Lobby implements Serializable {
     @MapKeyColumn(name = "user_id")
     @Column(name = "color")
     @Enumerated(EnumType.STRING)
-
     private Map<Long, PlayerColor> colorPreferences = new HashMap<>();
 
     @Column
     private Integer turnTimerSeconds; // null = no limit
 
-    @Column
-    private boolean fogOfWarEnabled;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "fog_of_war_mode", nullable = false, columnDefinition = "varchar(10) default 'OFF'")
+    private FogOfWarMode fogOfWarMode = FogOfWarMode.OFF;
 
     public Integer getTurnTimerSeconds() {
         return turnTimerSeconds;
@@ -104,10 +105,10 @@ public class Lobby implements Serializable {
     public void setColorPreferences(Map<Long, PlayerColor> colorPreferences) {
         this.colorPreferences = colorPreferences;
     }
-    public boolean isFogOfWarEnabled() {
-        return fogOfWarEnabled;
+    public FogOfWarMode getFogOfWarMode() {
+        return fogOfWarMode;
     }
-    public void setFogOfWarEnabled(boolean fogOfWarEnabled) {
-        this.fogOfWarEnabled = fogOfWarEnabled;
+    public void setFogOfWarMode(FogOfWarMode fogOfWarMode) {
+        this.fogOfWarMode = fogOfWarMode;
     }
 }

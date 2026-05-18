@@ -6,6 +6,7 @@ import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.MissionStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.MissionType;
 import ch.uzh.ifi.hase.soprafs26.constant.PlayerColor;
+import ch.uzh.ifi.hase.soprafs26.constant.FogOfWarMode;
 
 public class GameStateDTO {
     private Long gameId;
@@ -21,7 +22,7 @@ public class GameStateDTO {
     private Integer turnTimerSeconds;
     private Long turnStartedAtMillis;
     private Long timedOutPlayerId; // one-shot: set on the broadcast that follows a forced turn end
-    private boolean fogOfWarEnabled;
+    private FogOfWarMode fogOfWarMode;
 
     public boolean isMoveDoneThisTurn() { return moveDoneThisTurn; }
     public void setMoveDoneThisTurn(boolean moveDoneThisTurn) { this.moveDoneThisTurn = moveDoneThisTurn; }
@@ -39,8 +40,8 @@ public class GameStateDTO {
 
     public void setTimedOutPlayerId(Long timedOutPlayerId) {this.timedOutPlayerId = timedOutPlayerId;}
     
-    public boolean isFogOfWarEnabled() { return fogOfWarEnabled; }
-    public void setFogOfWarEnabled(boolean fogOfWarEnabled) { this.fogOfWarEnabled = fogOfWarEnabled; }
+    public FogOfWarMode getFogOfWarMode() { return fogOfWarMode; }
+    public void setFogOfWarMode(FogOfWarMode fogOfWarMode) { this.fogOfWarMode = fogOfWarMode; }
 
     public static class PlayerStateDTO {
         private Long playerId;

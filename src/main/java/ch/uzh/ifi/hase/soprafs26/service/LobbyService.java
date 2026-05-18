@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.PlayerColor;
+import ch.uzh.ifi.hase.soprafs26.constant.FogOfWarMode;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
 import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.User;
@@ -190,7 +191,7 @@ public class LobbyService {
         broadcastLobbyUpdate(lobby);
     }
 
-    public Lobby updateSettings(Long lobbyId, Long userId, Integer turnTimerSeconds, boolean fogOfWarEnabled) {
+    public Lobby updateSettings(Long lobbyId, Long userId, Integer turnTimerSeconds, FogOfWarMode fogOfWarMode) {
         Lobby lobby = getLobbyById(lobbyId);
 
         if (!lobby.getHost().getId().equals(userId)) {
@@ -208,7 +209,7 @@ public class LobbyService {
         }
 
         lobby.setTurnTimerSeconds(turnTimerSeconds);
-        lobby.setFogOfWarEnabled(fogOfWarEnabled);
+        lobby.setFogOfWarMode(fogOfWarMode);
         lobby = lobbyRepository.save(lobby);
         lobbyRepository.flush();
         broadcastLobbyUpdate(lobby);

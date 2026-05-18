@@ -5,6 +5,7 @@ import java.util.Map;
 
 import ch.uzh.ifi.hase.soprafs26.constant.LobbyStatus;
 import ch.uzh.ifi.hase.soprafs26.constant.PlayerColor;
+import ch.uzh.ifi.hase.soprafs26.constant.FogOfWarMode;
 
 public class LobbyGetDTO {
     private Long lobbyId;
@@ -14,7 +15,7 @@ public class LobbyGetDTO {
     private List<UserGetDTO> jointUsers;
     private Integer turnTimerSeconds;
     private Map<Long, PlayerColor> colorPreferences;
-    private boolean fogOfWarEnabled;
+    private FogOfWarMode fogOfWarMode;
 
     public Map<Long, PlayerColor> getColorPreferences() { 
         return colorPreferences; 
@@ -59,10 +60,10 @@ public class LobbyGetDTO {
         this.jointUsers = jointUsers;
     }
 
-    public boolean isFogOfWarEnabled() {
+    public FogOfWarMode getFogOfWarEnabled() {
         return fogOfWarEnabled;
     }
-    public void setFogOfWarEnabled(boolean fogOfWarEnabled) {
-        this.fogOfWarEnabled = fogOfWarEnabled;
+    public void setFogOfWarMode(FogOfWarMode fogOfWarMode) {
+        this.fogOfWarMode = fogOfWarMode;
     }
 }

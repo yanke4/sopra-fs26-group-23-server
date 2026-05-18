@@ -4,6 +4,7 @@ import java.util.List;
 
 import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
+import ch.uzh.ifi.hase.soprafs26.constant.FogOfWarMode;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -46,8 +47,10 @@ public class Game implements Serializable {
     @Column
     private Long turnStartedAtMillis; // epoch millis when the current player's turn began
 
-    @Column
-    private boolean fogOfWarEnabled;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private FogOfWarMode fogOfWarMode = FogOfWarMode.OFF;
+
 
     @Enumerated(EnumType.STRING)
     private GameStatus status; //either waiting, running or finished
@@ -148,10 +151,10 @@ public void setMoveDoneThisTurn(boolean moveDoneThisTurn) {
         this.turnStartedAtMillis = turnStartedAtMillis;
     }
 
-    public boolean isFogOfWarEnabled() {
-        return fogOfWarEnabled;
+    public FogOfWarMode getFogOfWarMode() {
+        return fogOfWarMode;
     }
-    public void setFogOfWarEnabled(boolean fogOfWarEnabled) {
-        this.fogOfWarEnabled = fogOfWarEnabled;
+    public void setFogOfWarMode(FogOfWarMode fogOfWarMode) {
+        this.fogOfWarMode = fogOfWarMode;
     }
 }
