@@ -57,7 +57,10 @@ public class UserService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Password must not be empty");
         }
 
-        checkIfUsernameExists(newUser.getUsername());
+        if (checkIfUsernameExists(newUser.getUsername())){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "The username provided is not unique. Therefore, the user could not be created!");
+        }
         newUser.setPasswordHash(hashPassword(newUser.getPasswordHash()));
         if (newUser.getCreatedAt() == null) {
             newUser.setCreatedAt(Instant.now());
@@ -146,12 +149,14 @@ public class UserService {
         userRepository.flush();
     }
 
-    private void checkIfUsernameExists(String username) {
+    private boolean checkIfUsernameExists(String username) {
         User userByUsername = userRepository.findByUsername(username);
         if (userByUsername != null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "The username provided is not unique. Therefore, the user could not be created!");
+            return true; 
         }
+        return false;
     }
 
     private String hashPassword(String rawPassword) {
