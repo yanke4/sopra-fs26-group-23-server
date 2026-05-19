@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.UserStatsRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,12 +22,17 @@ public class UserServiceIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Qualifier("userStatsRepository")
+    @Autowired
+    private UserStatsRepository userStatsRepository;
+
     @Autowired
     private UserService userService;
 
     @BeforeEach
     public void setup() {
         userRepository.deleteAll();
+        userStatsRepository.deleteAll();
     }
 
     @Test

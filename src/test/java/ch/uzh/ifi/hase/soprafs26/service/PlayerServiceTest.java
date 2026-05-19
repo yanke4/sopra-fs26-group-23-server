@@ -147,6 +147,9 @@ public class PlayerServiceTest {
 
     @Test
     public void surrender_gameNotFinished_doesNotUpdateStats() {
+        Player playerC = buildPlayer(3L, true);
+        game.getPlayerOrder().add(playerC);
+        
         playerService.surrender(GAME_ID, PLAYER_A_ID);
 
         verify(userService, never()).updatePlayerStats(game);

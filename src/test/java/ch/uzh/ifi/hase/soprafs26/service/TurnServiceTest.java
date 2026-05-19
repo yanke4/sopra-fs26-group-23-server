@@ -201,7 +201,7 @@ public class TurnServiceTest {
 
         assertEquals(initialTroops - 5L, activePlayer.getTroopCount()); // Assert Player should have 5 troops
         verify(fieldService).addUnits("A", 5L, GAME_ID); // Verify field units were added
-        verify(gameService).broadcastGameUpdate(GAME_ID); // Verify broadcast was called
+        verify(gameService).broadcastGameState(game); // Verify broadcast was called
     }
 
     @Test
@@ -283,7 +283,7 @@ public class TurnServiceTest {
 
         assertEquals(HttpStatus.FORBIDDEN, exception.getStatusCode());
         verify(fieldService, never()).addUnits("C", 5L, GAME_ID); // Verify no units were added to field C
-        verify(gameService, never()).broadcastGameUpdate(GAME_ID); // Verify no broadcast was called
+        verify(gameService, never()).broadcastGameState(game); // Verify no broadcast was called
     }
 
 
@@ -318,7 +318,7 @@ public class TurnServiceTest {
         assertTrue(fieldB.getTroops() >= 1 && fieldB.getTroops() <= 3);
 
         verify(gameRepository).flush(); // Verify game state was flushed
-        verify(gameService).broadcastGameUpdate(eq(GAME_ID), any(GameStateDTO.AttackEventDTO.class)); // Verify broadcast was called
+        verify(gameService).broadcastGameState(eq(game), any(GameStateDTO.AttackEventDTO.class)); // Verify broadcast was called
     }
 
     @Test
@@ -343,7 +343,7 @@ public class TurnServiceTest {
 
         ArgumentCaptor<GameStateDTO.AttackEventDTO> attackEventCaptor =
             ArgumentCaptor.forClass(GameStateDTO.AttackEventDTO.class);
-        verify(gameService).broadcastGameUpdate(eq(GAME_ID), attackEventCaptor.capture());
+        verify(gameService).broadcastGameState(eq(game), attackEventCaptor.capture());
         GameStateDTO.AttackEventDTO attackEvent = attackEventCaptor.getValue();
 
         assertEquals("A", attackEvent.getAttacker());
@@ -520,7 +520,7 @@ public class TurnServiceTest {
         verify(fieldService).addUnits("B", 2L, GAME_ID); // Verify units were added to target field
         verify(gameRepository).save(game); // Verify game state was saved
         verify(gameRepository).flush(); // Verify game state was flushed
-        verify(gameService).broadcastGameUpdate(GAME_ID); // Verify broadcast was called
+        verify(gameService).broadcastGameState(game); // Verify broadcast was called
     }
 
     @Test
