@@ -31,8 +31,8 @@ public class UserServiceIntegrationTest {
 
     @BeforeEach
     public void setup() {
+        userStatsRepository.deleteAll(); // we need to delete user stats first because if we delete a user before then the call on that user stats will fail
         userRepository.deleteAll();
-        userStatsRepository.deleteAll();
     }
 
     @Test
