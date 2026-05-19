@@ -9,6 +9,8 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.repository.LobbyRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.PlayerRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserStatsRepository;
 
@@ -27,10 +29,18 @@ public class UserServiceIntegrationTest {
     private UserStatsRepository userStatsRepository;
 
     @Autowired
+    private LobbyRepository lobbyRepository;
+
+    @Autowired 
+    private PlayerRepository playerRepository;
+
+    @Autowired
     private UserService userService;
 
     @BeforeEach
     public void setup() {
+        playerRepository.deleteAll();
+        lobbyRepository.deleteAll();
         userStatsRepository.deleteAll(); // we need to delete user stats first because if we delete a user before then the call on that user stats will fail
         userRepository.deleteAll();
     }
