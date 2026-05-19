@@ -16,6 +16,7 @@ import java.security.MessageDigest;
 
 import ch.uzh.ifi.hase.soprafs26.entity.User;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.UserStatsRepository;
 import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -30,6 +31,9 @@ public class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private UserStatsRepository userStatsRepository;
 
     @InjectMocks
     private UserService userService;
