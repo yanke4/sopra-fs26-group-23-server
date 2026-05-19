@@ -13,6 +13,7 @@ import ch.uzh.ifi.hase.soprafs26.repository.LobbyRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.PlayerRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserRepository;
 import ch.uzh.ifi.hase.soprafs26.repository.UserStatsRepository;
+import ch.uzh.ifi.hase.soprafs26.repository.GameRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,11 +36,14 @@ public class UserServiceIntegrationTest {
     private PlayerRepository playerRepository;
 
     @Autowired
+    private GameRepository gameRepository;
+
+    @Autowired
     private UserService userService;
 
     @BeforeEach
     public void setup() {
-        playerRepository.deleteAll();
+        gameRepository.deleteAll();
         lobbyRepository.deleteAll();
         userStatsRepository.deleteAll(); // we need to delete user stats first because if we delete a user before then the call on that user stats will fail
         userRepository.deleteAll();
