@@ -3,12 +3,25 @@ package ch.uzh.ifi.hase.soprafs26.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Collections;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
@@ -16,9 +29,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
+import ch.uzh.ifi.hase.soprafs26.constant.FogOfWarMode;
 import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
 import ch.uzh.ifi.hase.soprafs26.entity.Game;
+import ch.uzh.ifi.hase.soprafs26.entity.Lobby;
 import ch.uzh.ifi.hase.soprafs26.entity.Map;
 import ch.uzh.ifi.hase.soprafs26.entity.Player;
 import ch.uzh.ifi.hase.soprafs26.entity.Region;
@@ -223,6 +238,59 @@ public class GameServiceTest {
 
         assertEquals(PLAYER_A_ID, dto.getCurrentPlayerId());
     }
+
+    @Test
+    void createGame_handlesIdCollision_and_initializesGame() { //edge case => generated Game ID already exists in DB
+        User host = new User(); host.setId(11L); host.setUsername("host");
+        User joint = new User(); joint.setId(12L); joint.setUsername("player2");
+
+        Lobby lobby = new Lobby();
+        lobby.setHost(host);
+        lobby.setJointUsers(Collections.singletonList(joint));
+        lobby.setTurnTimerSeconds(30);
+        lobby.setFogOfWarMode(FogOfWarMode.OFF);
+        lobby.setColorPreferences(Collections.emptyMap());
+
+        when(gameRepository.existsById(anyLong())).thenReturn(true, true, false);
+        when(gameRepository.save(any(Game.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(regionService.calculateRegionBonus(anyLong(), any(Player.class))).thenReturn(0);
+
+        Game created = gameService.createGame(lobby);
+
+        assertNotNull(created.getId());
+        List<Player> players = created.getPlayerOrder();
+        assertEquals(2, players.size());
+        assertEquals(4L, players.get(0).getTroopCount());
+        verify(gameRepository, atLeastOnce()).existsById(anyLong());
+        verify(gameRepository).save(any(Game.class));
+    }
+
+    @Test
+    void enforceTurnTimers_callsForceEndTurn_forExpiredGames() { // does game automatically end turn when turn timer expires
+        Game expired = new Game();
+        expired.setId(100L);
+        expired.setStatus(GameStatus.RUNNING);
+        expired.setTurnTimerSeconds(1);
+        expired.setTurnStartedAtMillis(System.currentTimeMillis() - 10_000L);
+
+        Game fresh = new Game();
+        fresh.setId(200L);
+        fresh.setStatus(GameStatus.RUNNING);
+        fresh.setTurnTimerSeconds(3600);
+        fresh.setTurnStartedAtMillis(System.currentTimeMillis());
+
+        when(gameRepository.findAll()).thenReturn(Arrays.asList(expired, fresh));
+
+        GameService spyService = Mockito.spy(new GameService(gameRepository, messagingTemplate, regionService, missionService));
+        doReturn(Arrays.asList(expired, fresh)).when(gameRepository).findAll();
+        doNothing().when(spyService).forceEndTurn(anyLong());
+
+        spyService.enforceTurnTimers();
+
+        verify(spyService, atLeastOnce()).forceEndTurn(eq(expired.getId()));
+        verify(spyService, never()).forceEndTurn(eq(fresh.getId()));
+    }
+
 
     // --- helpers ---
 
