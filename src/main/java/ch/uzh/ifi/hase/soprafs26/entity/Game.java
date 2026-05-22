@@ -162,4 +162,12 @@ public void setMoveDoneThisTurn(boolean moveDoneThisTurn) {
     public void setFogOfWarMode(FogOfWarMode fogOfWarMode) {
         this.fogOfWarMode = fogOfWarMode;
     }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
 }
