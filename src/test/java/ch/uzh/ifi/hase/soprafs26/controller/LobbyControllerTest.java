@@ -194,4 +194,126 @@ public class LobbyControllerTest {
                         .content("{\"userId\": 1}"))
                 .andExpect(status().isConflict());
     }
+    @Test
+    public void kickMember_validRequest_returns204() throws Exception {
+        doNothing().when(lobbyService).kickMember(10L, 1L, 2L);
+ 
+        mockMvc.perform(post("/lobbies/10/kick")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\": 1, \"targetUserId\": 2}"))
+                .andExpect(status().isNoContent());
+    }
+ 
+    @Test
+    public void kickMember_notHost_returns403() throws Exception {
+        doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the host can kick members."))
+                .when(lobbyService).kickMember(10L, 2L, 1L);
+ 
+        mockMvc.perform(post("/lobbies/10/kick")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\": 2, \"targetUserId\": 1}"))
+                .andExpect(status().isForbidden());
+    }
+ 
+    @Test
+    public void kickMember_hostKicksSelf_returns400() throws Exception {
+        doThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Host cannot kick themselves."))
+                .when(lobbyService).kickMember(eq(10L), eq(1L), eq(1L));
+ 
+        mockMvc.perform(post("/lobbies/10/kick")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\": 1, \"targetUserId\": 1}"))
+                .andExpect(status().isBadRequest());
+    }
+ 
+    @Test
+    public void kickMember_targetNotInLobby_returns404() throws Exception {
+        doThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not in this lobby."))
+                .when(lobbyService).kickMember(eq(10L), eq(1L), eq(99L));
+ 
+        mockMvc.perform(post("/lobbies/10/kick")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\": 1, \"targetUserId\": 99}"))
+                .andExpect(status().isNotFound());
+    }
+ 
+    // -----------------------------------------------------------------------
+    // PUT /lobbies/{lobbyId}/settings
+    // -----------------------------------------------------------------------
+ 
+    @Test
+    public void updateSettings_validRequest_returns200WithLobby() throws Exception {
+        given(lobbyService.updateSettings(eq(10L), eq(1L), eq(30), any()))
+                .willReturn(lobby);
+ 
+        mockMvc.perform(put("/lobbies/10/settings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\": 1, \"turnTimerSeconds\": 30, \"fogOfWarMode\": \"OFF\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.lobbyId", is(10)));
+    }
+ 
+    @Test
+    public void updateSettings_notHost_returns403() throws Exception {
+        given(lobbyService.updateSettings(eq(10L), eq(2L), any(), any()))
+                .willThrow(new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Only the host can change lobby settings."));
+ 
+        mockMvc.perform(put("/lobbies/10/settings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\": 2, \"turnTimerSeconds\": 30}"))
+                .andExpect(status().isForbidden());
+    }
+ 
+    @Test
+    public void updateSettings_invalidTimerValue_returns400() throws Exception {
+        given(lobbyService.updateSettings(eq(10L), eq(1L), eq(45), any()))
+                .willThrow(new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "turnTimerSeconds must be null, 30 or 60."));
+ 
+        mockMvc.perform(put("/lobbies/10/settings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\": 1, \"turnTimerSeconds\": 45}"))
+                .andExpect(status().isBadRequest());
+    }
+ 
+    // -----------------------------------------------------------------------
+    // PUT /lobbies/{lobbyId}/colors
+    // -----------------------------------------------------------------------
+ 
+    @Test
+    public void selectColor_validRequest_returns200WithLobby() throws Exception {
+        given(lobbyService.selectColor(eq(10L), eq(1L), any()))
+                .willReturn(lobby);
+ 
+        mockMvc.perform(put("/lobbies/10/colors")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\": 1, \"color\": \"RED\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.lobbyId", is(10)));
+    }
+ 
+    @Test
+    public void selectColor_colorAlreadyTaken_returns409() throws Exception {
+        given(lobbyService.selectColor(eq(10L), eq(1L), any()))
+                .willThrow(new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Color RED is already taken."));
+ 
+        mockMvc.perform(put("/lobbies/10/colors")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\": 1, \"color\": \"RED\"}"))
+                .andExpect(status().isConflict());
+    }
+ 
+    @Test
+    public void selectColor_userNotInLobby_returns403() throws Exception {
+        given(lobbyService.selectColor(eq(10L), eq(99L), any()))
+                .willThrow(new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "User is not in this lobby."));
+ 
+        mockMvc.perform(put("/lobbies/10/colors")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"userId\": 99, \"color\": \"BLUE\"}"))
+                .andExpect(status().isForbidden());
+    }
 }

@@ -1,13 +1,20 @@
 package ch.uzh.ifi.hase.soprafs26.controller;
 
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
-import ch.uzh.ifi.hase.soprafs26.entity.User;
-import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
-import ch.uzh.ifi.hase.soprafs26.service.UserService;
+import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import org.mockito.Mockito;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.HttpStatus;
@@ -15,26 +22,19 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.time.Instant;
-import java.util.Collections;
-import java.util.List;
-
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.verify;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.willThrow;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.web.server.ResponseStatusException;
+
+import ch.uzh.ifi.hase.soprafs26.entity.User;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserPostDTO;
+import ch.uzh.ifi.hase.soprafs26.rest.dto.UserStatsDTO;
+import ch.uzh.ifi.hase.soprafs26.service.UserService;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(UserController.class)
 public class UserControllerTest {
@@ -195,5 +195,130 @@ public class UserControllerTest {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     String.format("The request body could not be created.%s", e.toString()));
         }
+    }
+
+	@Test
+    public void loginUser_validCredentials_returns200WithToken() throws Exception {
+        User user = new User();
+        user.setId(1L);
+        user.setUsername("alice");
+        user.setToken("secret-token");
+        user.setCreatedAt(Instant.parse("2026-01-01T00:00:00Z"));
+ 
+        given(userService.logInUser(Mockito.any())).willReturn(user);
+ 
+        UserPostDTO dto = new UserPostDTO();
+        dto.setUsername("alice");
+        dto.setPassword("correct");
+ 
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id",       is(1)))
+                .andExpect(jsonPath("$.username", is("alice")))
+                .andExpect(jsonPath("$.token",    is("secret-token")));
+    }
+ 
+    @Test
+    public void loginUser_wrongCredentials_returns401() throws Exception {
+        given(userService.logInUser(Mockito.any()))
+                .willThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials."));
+ 
+        UserPostDTO dto = new UserPostDTO();
+        dto.setUsername("alice");
+        dto.setPassword("wrong");
+ 
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(dto)))
+                .andExpect(status().isUnauthorized());
+    }
+ 
+    @Test
+    public void loginUser_unknownUser_returns404() throws Exception {
+        given(userService.logInUser(Mockito.any()))
+                .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found."));
+ 
+        UserPostDTO dto = new UserPostDTO();
+        dto.setUsername("nobody");
+        dto.setPassword("pass");
+ 
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(asJsonString(dto)))
+                .andExpect(status().isNotFound());
+    }
+ 
+    // -----------------------------------------------------------------------
+    // POST /auth/logout
+    // -----------------------------------------------------------------------
+ 
+    @Test
+    public void logoutUser_validToken_returns200() throws Exception {
+        User user = new User();
+        user.setId(1L);
+        user.setToken("valid-token");
+ 
+        given(userService.authenticateUser("valid-token")).willReturn(user);
+        doNothing().when(userService).logOutUser(1L);
+ 
+        mockMvc.perform(post("/auth/logout")
+                        .header("token", "valid-token"))
+                .andExpect(status().isOk());
+    }
+ 
+    @Test
+    public void logoutUser_invalidToken_returns401() throws Exception {
+        given(userService.authenticateUser("bad-token"))
+                .willThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token."));
+ 
+        mockMvc.perform(post("/auth/logout")
+                        .header("token", "bad-token"))
+                .andExpect(status().isUnauthorized());
+    }
+ 
+    // -----------------------------------------------------------------------
+    // GET /leaderboard
+    // -----------------------------------------------------------------------
+ 
+    @Test
+    public void getLeaderboard_multipleEntries_returnsSortedList() throws Exception {
+        UserStatsDTO first  = buildStatsDTO(1L, "alice", 10L, 15L, 0.667);
+        UserStatsDTO second = buildStatsDTO(2L, "bob",    5L, 12L, 0.417);
+ 
+        given(userService.getLeaderboard()).willReturn(List.of(first, second));
+ 
+        mockMvc.perform(get("/leaderboard"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$",              hasSize(2)))
+                .andExpect(jsonPath("$[0].userId",    is(1)))
+                .andExpect(jsonPath("$[0].username",  is("alice")))
+                .andExpect(jsonPath("$[0].wins",      is(10)))
+                .andExpect(jsonPath("$[1].userId",    is(2)));
+    }
+ 
+    @Test
+    public void getLeaderboard_noPlayers_returnsEmptyArray() throws Exception {
+        given(userService.getLeaderboard()).willReturn(List.of());
+ 
+        mockMvc.perform(get("/leaderboard"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+    }
+ 
+    // -----------------------------------------------------------------------
+    // Helper
+    // -----------------------------------------------------------------------
+ 
+    private UserStatsDTO buildStatsDTO(Long userId, String username,
+                                       Long wins, Long games, Double pct) {
+        UserStatsDTO dto = new UserStatsDTO();
+        dto.setUserId(userId);
+        dto.setUsername(username);
+        dto.setWins(wins);
+        dto.setGamesPlayed(games);
+        dto.setWinPercentage(pct);
+        return dto;
     }
 }
