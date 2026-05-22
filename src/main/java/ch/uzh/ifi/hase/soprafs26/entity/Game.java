@@ -2,9 +2,9 @@ package ch.uzh.ifi.hase.soprafs26.entity;
 import java.io.Serializable;
 import java.util.List;
 
+import ch.uzh.ifi.hase.soprafs26.constant.FogOfWarMode;
 import ch.uzh.ifi.hase.soprafs26.constant.GamePhase;
 import ch.uzh.ifi.hase.soprafs26.constant.GameStatus;
-import ch.uzh.ifi.hase.soprafs26.constant.FogOfWarMode;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 
 @Entity
@@ -22,6 +23,10 @@ public class Game implements Serializable {
 
     @Id
     private Long id;
+
+    @Version
+    @Column(nullable = false)
+    private Long version = 0L;
 
 
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL)
