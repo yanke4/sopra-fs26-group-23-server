@@ -25,7 +25,7 @@ public class Game implements Serializable {
     private Long id;
 
     @Version
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
     private Long version = 0L;
 
 
